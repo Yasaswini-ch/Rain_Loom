@@ -21,26 +21,31 @@ from loguru import logger
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.class_weight import compute_class_weight
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import backend as K
-from tensorflow.keras.callbacks import (
-    EarlyStopping,
-    ModelCheckpoint,
-    ReduceLROnPlateau,
-)
-from tensorflow.keras.layers import (
-    BatchNormalization,
-    Dense,
-    Dropout,
-    Input,
-    LSTM,
-    Layer,
-    Multiply,
-    Permute,
-    RepeatVector,
-)
-from tensorflow.keras.models import Model, Sequential, load_model
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import backend as K
+    from tensorflow.keras.callbacks import (
+        EarlyStopping,
+        ModelCheckpoint,
+        ReduceLROnPlateau,
+    )
+    from tensorflow.keras.layers import (
+        BatchNormalization,
+        Dense,
+        Dropout,
+        Input,
+        LSTM,
+        Layer,
+        Multiply,
+        Permute,
+        RepeatVector,
+    )
+    from tensorflow.keras.models import Model, Sequential, load_model
+    _HAS_TF = True
+except ImportError:
+    _HAS_TF = False
+    logger.warning("TensorFlow not installed — LSTM layer disabled")
 
 
 # ---------------------------------------------------------------------------
