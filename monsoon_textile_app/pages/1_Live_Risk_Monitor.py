@@ -987,7 +987,7 @@ with right_col:
         title_text="Price (Rs/candy)",
         showgrid=False,
         tickfont=dict(size=12),
-        titlefont=dict(size=13),
+        title_font=dict(size=13),
         secondary_y=False,
     )
     fig_cotton.update_yaxes(
@@ -995,7 +995,7 @@ with right_col:
         range=[0, 1],
         showgrid=False,
         tickfont=dict(size=12),
-        titlefont=dict(size=13),
+        title_font=dict(size=13),
         secondary_y=True,
     )
     fig_cotton.update_xaxes(
