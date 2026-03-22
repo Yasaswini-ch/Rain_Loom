@@ -44,3 +44,6 @@ notebooks/.ipynb_checkpoints/
 
 # Streamlit cache
 .streamlit/secrets.toml
+
+# Local API subscribers (contains personal emails)
+monsoon_textile_app/api/subscribers.json

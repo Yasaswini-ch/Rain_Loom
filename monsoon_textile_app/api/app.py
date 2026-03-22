@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 from pathlib import Path
 
 # Ensure project root is on path
@@ -57,6 +58,7 @@ def root():
             "/api/risk-scores",
             "/api/alerts",
             "/api/subscribe",
+            "/api/dispatch-alerts",
         ],
     }
 
@@ -75,6 +77,58 @@ def start_api_background(host: str = "0.0.0.0", port: int = 8000):
     return thread
 
 
+def start_email_dispatch_scheduler() -> "threading.Thread":
+    """
+    Start periodic email dispatch in a background thread.
+
+    Env vars:
+    - ENABLE_EMAIL_SCHEDULER: 1/true/yes to enable
+    - EMAIL_DISPATCH_INTERVAL_SECONDS: default 900 (15 minutes)
+    - EMAIL_DISPATCH_DRY_RUN: 1/true/yes to simulate only
+    """
+    import threading
+    from monsoon_textile_app.api.data_bridge import dispatch_alert_emails
+
+    interval_raw = os.environ.get("EMAIL_DISPATCH_INTERVAL_SECONDS", "900").strip()
+    try:
+        interval_seconds = max(30, int(interval_raw))
+    except ValueError:
+        interval_seconds = 900
+
+    dry_run = os.environ.get("EMAIL_DISPATCH_DRY_RUN", "0").strip().lower() in ("1", "true", "yes")
+
+    def _run():
+        print(
+            f"[API] Email scheduler started | interval={interval_seconds}s | dry_run={dry_run}"
+        )
+        while True:
+            try:
+                result = dispatch_alert_emails(dry_run=dry_run)
+                print(
+                    "[API] Email dispatch | status={status} sent={sent} targeted={targeted} alerts={alerts}".format(
+                        status=result.get("status"),
+                        sent=result.get("emails_sent"),
+                        targeted=result.get("recipients_targeted"),
+                        alerts=result.get("total_alerts"),
+                    )
+                )
+                if result.get("failures"):
+                    print(f"[API] Email dispatch failures: {result.get('failures')}")
+            except Exception as exc:
+                print(f"[API] Email scheduler error: {exc}")
+
+            time.sleep(interval_seconds)
+
+    thread = threading.Thread(target=_run, daemon=True, name="email-dispatch-scheduler")
+    thread.start()
+    return thread
+
+
 # Auto-start when ENABLE_API=1
 if os.environ.get("ENABLE_API", "").strip() in ("1", "true", "yes"):
     start_api_background()
+
+
+# Optional periodic alert dispatch
+if os.environ.get("ENABLE_EMAIL_SCHEDULER", "").strip().lower() in ("1", "true", "yes"):
+    start_email_dispatch_scheduler()

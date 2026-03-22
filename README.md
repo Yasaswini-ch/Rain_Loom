@@ -93,6 +93,12 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password
+SMTP_SENDER=alerts@yourdomain.com
+
+# Optional: auto-dispatch alerts on a schedule
+ENABLE_EMAIL_SCHEDULER=1
+EMAIL_DISPATCH_INTERVAL_SECONDS=900
+EMAIL_DISPATCH_DRY_RUN=0
 ```
 
 ### Run the Dashboard
@@ -190,6 +196,7 @@ Risk scores map to four regimes: **LOW** (0–30%), **MODERATE** (30–60%), **H
 | GET | `/api/risk-scores` | Current ensemble risk scores for all stocks |
 | GET | `/api/alerts` | Active alerts and advisories |
 | POST | `/api/subscribe` | Subscribe to email alerts |
+| POST | `/api/dispatch-alerts` | Dispatch current alerts to subscribed emails |
 | GET | `/api/docs` | Interactive Swagger documentation |
 
 ---

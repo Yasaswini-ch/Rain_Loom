@@ -10,10 +10,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import datetime as _dt
+import os
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import requests
 from monsoon_textile_app.components.navbar import render_navbar
 from monsoon_textile_app.components.chat_bubble import render_chat_bubble
 
@@ -457,6 +459,147 @@ with st.expander("What is this page?"):
     )
 
 # ── Common Plotly layout helper ───────────────────────────────────────
+
+
+def _api_base_url() -> str:
+    """Resolve API base URL for email subscription and dispatch actions."""
+    return os.environ.get("RAINLOOM_API_URL", "http://localhost:8000").rstrip("/")
+
+
+def _post_api(path: str, payload: dict | None = None, params: dict | None = None) -> tuple[bool, dict | str]:
+    """POST helper with graceful error handling for Streamlit UI actions."""
+    base = _api_base_url()
+    url = f"{base}{path}"
+    try:
+        resp = requests.post(url, json=payload, params=params, timeout=15)
+        if resp.status_code >= 400:
+            try:
+                data = resp.json()
+            except Exception:
+                data = {"detail": resp.text}
+            return False, data
+        try:
+            return True, resp.json()
+        except Exception:
+            return True, {"message": "Request succeeded."}
+    except Exception as exc:
+        return False, str(exc)
+
+
+def _subscribe_email(email: str, alert_types: list[str]) -> tuple[bool, dict | str, str]:
+    """
+    Subscribe an email via API when available, otherwise fallback to local data bridge.
+
+    Returns
+    -------
+    (ok, data, mode)
+        mode is either "api" or "local".
+    """
+    ok, data = _post_api("/api/subscribe", payload={"email": email, "alert_types": alert_types})
+    if ok:
+        return True, data, "api"
+
+    # Fallback path for single-process Streamlit deployments.
+    try:
+        from monsoon_textile_app.api.data_bridge import add_subscriber
+        result = add_subscriber(email, alert_types)
+        return True, result, "local"
+    except Exception as exc:
+        return False, f"{data} | local fallback failed: {exc}", "local"
+
+
+def _dispatch_alerts(dry_run: bool) -> tuple[bool, dict | str, str]:
+    """
+    Dispatch alerts via API when available, otherwise fallback to local data bridge.
+
+    Returns
+    -------
+    (ok, data, mode)
+        mode is either "api" or "local".
+    """
+    ok, data = _post_api(
+        "/api/dispatch-alerts",
+        params={"dry_run": str(bool(dry_run)).lower()},
+    )
+    if ok:
+        return True, data, "api"
+
+    # Fallback path for single-process Streamlit deployments.
+    try:
+        from monsoon_textile_app.api.data_bridge import dispatch_alert_emails
+        result = dispatch_alert_emails(dry_run=dry_run)
+        if result.get("status") == "error":
+            return False, result, "local"
+        return True, result, "local"
+    except Exception as exc:
+        return False, f"{data} | local fallback failed: {exc}", "local"
+
+
+st.markdown("""
+<div class="section-heading" style="margin-top:6px;">Alert Delivery</div>
+<div class="section-line emerald"></div>
+""", unsafe_allow_html=True)
+
+with st.container(border=True):
+    c1, c2 = st.columns([2, 1], gap="large")
+    with c1:
+        sub_email = st.text_input(
+            "Email for alerts",
+            value=st.session_state.get("alert_email", ""),
+            placeholder="you@example.com",
+            help="Subscribers receive alerts from the configured SMTP sender.",
+        )
+        severities = st.multiselect(
+            "Alert severities",
+            options=["critical", "warning", "info"],
+            default=["critical", "warning"],
+            help="Choose which alert levels this email should receive.",
+        )
+        st.caption(
+            f"API target: `{_api_base_url()}` | Falls back to local mode if API is unavailable."
+        )
+    with c2:
+        dry_run_dispatch = st.toggle(
+            "Dispatch dry run",
+            value=True,
+            help="When enabled, delivery is simulated without sending emails.",
+        )
+        st.caption("Tip: disable dry run to send real emails.")
+
+    act1, act2 = st.columns([1, 1], gap="small")
+    with act1:
+        if st.button("Subscribe Email", type="primary", use_container_width=True):
+            email = (sub_email or "").strip()
+            if "@" not in email or "." not in email:
+                st.error("Enter a valid email address.")
+            elif not severities:
+                st.error("Select at least one alert severity.")
+            else:
+                ok, data, mode = _subscribe_email(email=email, alert_types=severities)
+                if ok:
+                    st.session_state["alert_email"] = email
+                    st.success(f"Subscribed: {email} ({mode} mode)")
+                else:
+                    st.error(f"Subscribe failed: {data}")
+    with act2:
+        if st.button("Dispatch Alerts Now", use_container_width=True):
+            ok, data, mode = _dispatch_alerts(dry_run=dry_run_dispatch)
+            if ok:
+                st.success(
+                    "Dispatch complete ({mode}) | sent={sent} targeted={targeted} total_alerts={alerts} dry_run={dry}".format(
+                        mode=mode,
+                        sent=data.get("emails_sent", 0),
+                        targeted=data.get("recipients_targeted", 0),
+                        alerts=data.get("total_alerts", 0),
+                        dry=data.get("dry_run", dry_run_dispatch),
+                    )
+                )
+                failures = data.get("failures", []) if isinstance(data, dict) else []
+                if failures:
+                    st.warning("Some deliveries failed: " + "; ".join(str(x) for x in failures[:3]))
+            else:
+                st.error(f"Dispatch failed: {data}")
+
 _CHART_LAYOUT = dict(
     template="plotly_dark",
     paper_bgcolor="rgba(0,0,0,0)",

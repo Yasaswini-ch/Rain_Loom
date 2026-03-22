@@ -11,6 +11,7 @@ from fastapi import APIRouter, HTTPException
 
 from monsoon_textile_app.api.schemas import (
     AlertsResponse,
+    DispatchAlertsResponse,
     HealthResponse,
     RiskScoresResponse,
     StockRisk,
@@ -88,3 +89,14 @@ def subscribe(req: SubscribeRequest):
         alert_types=result["alert_types"],
         message=f"Successfully {result['status']} {req.email} for {', '.join(req.alert_types)} alerts.",
     )
+
+
+@router.post("/dispatch-alerts", response_model=DispatchAlertsResponse)
+def dispatch_alerts(dry_run: bool = False):
+    """Send current alerts to all subscribed email recipients."""
+    from monsoon_textile_app.api.data_bridge import dispatch_alert_emails
+
+    result = dispatch_alert_emails(dry_run=dry_run)
+    if result["status"] == "error":
+        raise HTTPException(status_code=503, detail=result["message"])
+    return DispatchAlertsResponse(**result)

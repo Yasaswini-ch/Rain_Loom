@@ -60,6 +60,19 @@ class SubscribeResponse(BaseModel):
     message: str
 
 
+class DispatchAlertsResponse(BaseModel):
+    status: str
+    timestamp: datetime
+    total_subscribers: int
+    recipients_targeted: int
+    total_alerts: int
+    emails_sent: int
+    deliveries_skipped: int
+    failures: list[str]
+    dry_run: bool
+    message: str
+
+
 class HealthResponse(BaseModel):
     status: str  # "ok", "degraded", "error"
     version: str
