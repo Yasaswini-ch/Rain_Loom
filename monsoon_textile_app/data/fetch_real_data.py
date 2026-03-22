@@ -766,17 +766,17 @@ def compute_risk_scores(
             vix_norm = pd.Series(0.2, index=sdf.index)
 
         # Compute component signals
-        climate_signal = (-rain_aligned).clip(0, 1) * 0.35 + breadth_aligned * 0.15
-        price_signal = cotton_aligned.abs().clip(0, 1) * 0.25
-        vol_signal = sdf["vol_20d"].fillna(0).clip(0, 1) * 0.15
-        market_signal = vix_norm * 0.10
+        climate_signal = (-rain_aligned).clip(0, 1) * 0.30 + breadth_aligned * 0.10
+        price_signal = cotton_aligned.abs().clip(0, 1) * 0.20
+        vol_signal = sdf["vol_20d"].fillna(0.25).clip(0, 1) * 0.25
+        market_signal = vix_norm * 0.15
 
         # Ensemble risk score with cotton dependency weighting
         raw_risk = (climate_signal + price_signal + vol_signal + market_signal) * dep
 
         # Chain multiplier
-        chain_mult = {"Upstream": 1.15, "Integrated": 0.90,
-                      "Downstream": 0.85}.get(info["chain"], 1.0)
+        chain_mult = {"Upstream": 1.25, "Integrated": 1.0,
+                      "Downstream": 0.90}.get(info["chain"], 1.0)
         raw_risk = raw_risk * chain_mult
 
         # Smooth and clip

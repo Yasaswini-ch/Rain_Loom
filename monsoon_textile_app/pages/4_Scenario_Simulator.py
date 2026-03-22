@@ -390,17 +390,20 @@ def compute_scenario_risk(
 
     dep = stock_info["dep"]
     chain_mult = {
-        "Upstream": 1.15, "Midstream": 1.0,
-        "Integrated": 0.90, "Downstream": 0.85,
+        "Upstream": 1.25, "Midstream": 1.1,
+        "Integrated": 1.0, "Downstream": 0.90,
     }
-    mult = chain_mult[stock_info["chain"]]
+    mult = chain_mult.get(stock_info["chain"], 1.0)
 
-    climate_signal = 0.35 * deficit_norm + 0.15 * breadth_norm
-    price_signal = 0.25 * cotton_norm
-    market_signal = 0.10 * vix_norm
+    climate_signal = 0.45 * deficit_norm + 0.20 * breadth_norm
+    price_signal = 0.30 * cotton_norm
+    market_signal = 0.15 * vix_norm
     base_risk = (climate_signal + price_signal + market_signal) * dep * mult
 
-    interaction = 0.15 * deficit_norm * cotton_norm * dep
+    # Non-linear amplification for severe deficits
+    if deficit_norm > 0.4:
+        base_risk += 0.15 * (deficit_norm - 0.4) * dep * mult
+    interaction = 0.20 * deficit_norm * cotton_norm * dep
     risk = min(0.99, max(0.01, base_risk + interaction))
 
     ci_half = 0.08 + 0.04 * risk
