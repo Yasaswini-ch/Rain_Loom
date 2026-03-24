@@ -117,40 +117,66 @@ COTTON_STATES = [
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# 1. FETCH REAL STOCK DATA
+# 1. FETCH REAL STOCK DATA  (single batch download → avoids rate limiting)
 # ═══════════════════════════════════════════════════════════════════════════
 def fetch_stock_data(start: str = "2015-01-01") -> dict[str, pd.DataFrame]:
-    """Fetch real OHLCV data from yfinance for all target stocks."""
+    """Fetch real OHLCV for all stocks in ONE yfinance batch call."""
     import yfinance as yf
+    import time
 
+    tickers = list(STOCKS.keys())
     stock_data = {}
-    for ticker, info in STOCKS.items():
+
+    def _process_single(df: pd.DataFrame, ticker: str) -> pd.DataFrame | None:
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+        if df.empty or "Close" not in df.columns:
+            return None
+        df = df.copy()
+        df["log_ret"] = np.log(df["Close"] / df["Close"].shift(1))
+        df["rv20"] = df["log_ret"].rolling(20).std() * np.sqrt(252)
+        df["vol_20d"] = df["rv20"]
+        weekly = df.resample("W-SUN").agg(
+            {"Open": "first", "High": "max", "Low": "min", "Close": "last", "Volume": "sum"}
+        ).dropna()
+        weekly["log_ret"] = np.log(weekly["Close"] / weekly["Close"].shift(1))
+        weekly["rv20"] = weekly["log_ret"].rolling(8).std() * np.sqrt(52)
+        weekly["vol_20d"] = weekly["rv20"].ffill().bfill()
+        weekly["price"] = weekly["Close"]
+        return weekly
+
+    # ── Primary: single batch download (1 API call for all 8 stocks) ──
+    try:
+        print(f"  [BATCH] Downloading {len(tickers)} tickers in one call...")
+        raw = yf.download(
+            tickers, start=start, auto_adjust=True,
+            progress=False, group_by="ticker", threads=True,
+        )
+        for ticker, info in STOCKS.items():
+            try:
+                df = raw[ticker].copy() if ticker in raw.columns.get_level_values(0) else pd.DataFrame()
+                result = _process_single(df, ticker)
+                if result is not None and len(result) > 10:
+                    stock_data[ticker] = result
+                    print(f"  [OK] {info['name']}: {len(result)} weeks")
+                else:
+                    print(f"  [WARN] {info['name']}: empty or too short")
+            except Exception as e:
+                print(f"  [WARN] {ticker} parse error: {e}")
+    except Exception as e:
+        print(f"  [WARN] Batch download failed ({e}), falling back to individual with delays")
+
+    # ── Fallback: individual downloads with 1s delay between each ──
+    missing = [t for t in tickers if t not in stock_data]
+    for i, ticker in enumerate(missing):
+        if i > 0:
+            time.sleep(1.2)          # 1.2s between calls avoids rate limits
         try:
             df = yf.download(ticker, start=start, auto_adjust=True, progress=False)
-            if isinstance(df.columns, pd.MultiIndex):
-                df.columns = df.columns.get_level_values(0)
-            if df.empty:
-                print(f"  [WARN] No data for {ticker}, skipping")
-                continue
-
-            # Compute features
-            df = df.copy()
-            df["log_ret"] = np.log(df["Close"] / df["Close"].shift(1))
-            df["rv20"] = df["log_ret"].rolling(20).std() * np.sqrt(252)
-            df["vol_20d"] = df["rv20"]
-
-            # Weekly resample
-            weekly = df.resample("W-SUN").agg({
-                "Open": "first", "High": "max", "Low": "min",
-                "Close": "last", "Volume": "sum",
-            }).dropna()
-            weekly["log_ret"] = np.log(weekly["Close"] / weekly["Close"].shift(1))
-            weekly["rv20"] = weekly["log_ret"].rolling(8).std() * np.sqrt(52)
-            weekly["vol_20d"] = weekly["rv20"].fillna(method="bfill")
-            weekly["price"] = weekly["Close"]
-
-            stock_data[ticker] = weekly
-            print(f"  [OK] {info['name']} ({ticker}): {len(weekly)} weeks")
+            result = _process_single(df, ticker)
+            if result is not None and len(result) > 10:
+                stock_data[ticker] = result
+                print(f"  [OK] {STOCKS[ticker]['name']}: {len(result)} weeks")
         except Exception as e:
             print(f"  [ERR] {ticker}: {e}")
 
@@ -158,10 +184,12 @@ def fetch_stock_data(start: str = "2015-01-01") -> dict[str, pd.DataFrame]:
 
 
 def fetch_cotton_futures(start: str = "2015-01-01") -> pd.DataFrame:
-    """Fetch MCX Cotton Candy futures with ICE Cotton No.2 (CT=F) as fallback proxy."""
+    """Fetch ICE Cotton No.2 (CT=F) as the primary data source.
+    MCX-India cotton tickers are not reliably available on yfinance, so
+    we use CT=F (USD cents/lb) converted to INR/bale as the canonical proxy."""
     import yfinance as yf
 
-    # --- Helper: download and reshape a single ticker into weekly OHLCV ---
+    # --- Helper: download one ticker, return clean DataFrame or None ---
     def _try_ticker(ticker: str, start: str) -> pd.DataFrame | None:
         try:
             df = yf.download(ticker, start=start, auto_adjust=True, progress=False)
@@ -175,51 +203,34 @@ def fetch_cotton_futures(start: str = "2015-01-01") -> pd.DataFrame:
         except Exception:
             return None
 
-    # --- 1. Try MCX Cotton Candy tickers (primary) ---
-    mcx_tickers = ["COTTONCANDY.NS", "COTTON.NS", "MCX:COTTONCANDY"]
-    mcx_df = None
-    mcx_ticker_used = None
-    for ticker in mcx_tickers:
-        print(f"  [TRY] MCX cotton ticker: {ticker}")
-        mcx_df = _try_ticker(ticker, start)
-        if mcx_df is not None and len(mcx_df) > 10:
-            mcx_ticker_used = ticker
-            print(f"  [OK]  Found MCX data via {ticker}: {len(mcx_df)} rows")
-            break
-        mcx_df = None
-
-    if mcx_df is not None:
-        # MCX data is already in INR per bale — use directly
-        weekly = mcx_df.resample("W-SUN").agg({
-            "Close": "last", "Volume": "sum",
-        }).dropna()
-        weekly.rename(columns={"Close": "price"}, inplace=True)
-        weekly["price_inr"] = weekly["price"]
-        weekly["cotton_source"] = "MCX"
-        weekly["log_ret"] = np.log(weekly["price"] / weekly["price"].shift(1))
-        weekly["rv20"] = weekly["log_ret"].rolling(8).std() * np.sqrt(52)
-        print(f"  [OK] Cotton futures (MCX via {mcx_ticker_used}): {len(weekly)} weeks")
-        return weekly
-
-    # --- 2. Fallback: ICE Cotton No.2 (CT=F) with proper USD/INR conversion ---
-    print("  [INFO] MCX tickers unavailable, falling back to ICE CT=F proxy")
+    # --- Batch download CT=F + INR=X in one API call ---
+    print("  [INFO] Fetching ICE Cotton No.2 (CT=F) + USD/INR in one batch call")
     try:
-        ice_df = _try_ticker("CT=F", start)
-        if ice_df is None or ice_df.empty:
+        import yfinance as yf
+        batch = yf.download(
+            ["CT=F", "INR=X"], start=start,
+            auto_adjust=True, progress=False, group_by="ticker",
+        )
+        # Extract CT=F
+        try:
+            ice_df = batch["CT=F"].copy()
+            if isinstance(ice_df.columns, pd.MultiIndex):
+                ice_df.columns = ice_df.columns.get_level_values(0)
+        except Exception:
+            ice_df = pd.DataFrame()
+        if ice_df is None or ice_df.empty or "Close" not in ice_df.columns:
             raise ValueError("ICE CT=F returned no data")
 
-        # Fetch live USD/INR exchange rate series for accurate conversion
-        forex_df = _try_ticker("INR=X", start)
-        if forex_df is not None and not forex_df.empty:
-            usdinr = forex_df[["Close"]].rename(columns={"Close": "usdinr"})
-            print(f"  [OK]  USD/INR forex data: {len(usdinr)} rows")
-        else:
-            # Last-resort: use a static rate if forex download fails
-            print("  [WARN] USD/INR forex unavailable, using static rate 83.0")
-            usdinr = pd.DataFrame(
-                {"usdinr": 83.0},
-                index=ice_df.index,
-            )
+        # Extract INR=X
+        try:
+            forex_raw = batch["INR=X"].copy()
+            if isinstance(forex_raw.columns, pd.MultiIndex):
+                forex_raw.columns = forex_raw.columns.get_level_values(0)
+            usdinr = forex_raw[["Close"]].rename(columns={"Close": "usdinr"})
+            print(f"  [OK]  USD/INR forex: {len(usdinr)} rows")
+        except Exception:
+            print("  [WARN] USD/INR unavailable, using static 84.0")
+            usdinr = pd.DataFrame({"usdinr": 84.0}, index=ice_df.index)
 
         # Merge ICE prices with forex on date index
         ice_df = ice_df[["Close", "Volume"]].join(usdinr, how="left")
@@ -1098,16 +1109,21 @@ def load_all_data(
         _st = None
 
     cache_file = _DATA_DIR / "cached_dashboard_data.pkl"
+    _CACHE_TTL_SECONDS = 900  # 15 minutes
 
     if use_cache and cache_file.exists():
         try:
-            import pickle
-            with open(cache_file, "rb") as f:
-                data = pickle.load(f)
-            print("[CACHE] Loaded cached data from", cache_file)
-            if _st is not None:
-                _st.session_state["_dashboard_data_cache"] = data
-            return data
+            import pickle, os
+            age = datetime.now().timestamp() - os.path.getmtime(cache_file)
+            if age < _CACHE_TTL_SECONDS:
+                with open(cache_file, "rb") as f:
+                    data = pickle.load(f)
+                print(f"[CACHE] Loaded cached data ({age/60:.1f} min old) from {cache_file.name}")
+                if _st is not None:
+                    _st.session_state["_dashboard_data_cache"] = data
+                return data
+            else:
+                print(f"[CACHE] Cache expired ({age/60:.1f} min old > 15 min), refreshing...")
         except Exception as e:
             print(f"[CACHE] Cache load failed: {e}, fetching fresh data")
 
@@ -1115,13 +1131,19 @@ def load_all_data(
     print("FETCHING REAL DATA")
     print("=" * 60)
 
-    # 1. Stock data
+    import time as _time
+
+    # 1. Stock data (single batch call for all 8 tickers)
     print("\n--- NSE Textile Stocks ---")
     stock_data = fetch_stock_data(start=start)
 
-    # 2. Cotton futures
-    print("\n--- ICE Cotton Futures ---")
+    _time.sleep(1.5)   # brief pause between yfinance call groups
+
+    # 2. Cotton futures (ICE CT=F)
+    print("\n--- ICE Cotton Futures (CT=F) ---")
     cotton_df = fetch_cotton_futures(start=start)
+
+    _time.sleep(1.0)
 
     # 3. India VIX
     print("\n--- India VIX ---")
