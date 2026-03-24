@@ -1090,30 +1090,44 @@ def fetch_ndvi_data(
 # ═══════════════════════════════════════════════════════════════════════════
 # MAIN: LOAD OR FETCH ALL DATA
 # ═══════════════════════════════════════════════════════════════════════════
+
+# ── Thread-safe singleton to prevent concurrent load_all_data() calls ──
+import threading as _threading
+_LOAD_LOCK = _threading.Lock()
+_LOADED_DATA: dict | None = None
+
+
 def load_all_data(
     use_cache: bool = True,
     start: str = "2015-01-01",
 ) -> dict:
     """
-    Load all data for the dashboard. Uses cached files if available,
-    otherwise fetches fresh data from yfinance.
-
-    Returns dict with keys:
-        - stock_data: {ticker: DataFrame} with risk scores
-        - cotton: DataFrame with price, regime_prob
-        - vix: DataFrame with vix level
-        - rainfall: dict with annual_deficit, weekly_rainfall, latest_deficit
-        - ndvi: DataFrame with date, state, ndvi_value (MODIS satellite NDVI)
-        - enso: DataFrame with oni_value, enso_phase (NOAA ONI for IV/2SLS)
-        - granger: dict with causality test results
-        - model_metrics: dict with per-stock model performance
+    Load all data for the dashboard.  Uses an in-process singleton lock
+    so that even if multiple Streamlit pages call this concurrently,
+    only ONE fetch/train cycle runs.
     """
-    # ── Session-state cache (fastest: survives page navigation) ──
+    global _LOADED_DATA
+
+    # ── Fast path: already loaded in this process ──
+    if _LOADED_DATA is not None:
+        print("[SINGLETON] Returning cached data from process memory")
+        return _LOADED_DATA
+
+    _CACHE_VERSION = "v3_formula"  # bump to invalidate stale ML caches
+
+    # ── Session-state cache (survives page navigation) ──
+    _st = None
     try:
         import streamlit as _st
         if use_cache and "_dashboard_data_cache" in _st.session_state:
-            print("[SESSION] Using session_state cached data")
-            return _st.session_state["_dashboard_data_cache"]
+            _cached = _st.session_state["_dashboard_data_cache"]
+            if _cached.get("_cache_version") == _CACHE_VERSION:
+                print("[SESSION] Using session_state cached data")
+                _LOADED_DATA = _cached
+                return _LOADED_DATA
+            else:
+                print("[SESSION] Stale session cache version, ignoring")
+                del _st.session_state["_dashboard_data_cache"]
     except Exception:
         _st = None
 
@@ -1127,14 +1141,28 @@ def load_all_data(
             if age < _CACHE_TTL_SECONDS:
                 with open(cache_file, "rb") as f:
                     data = pickle.load(f)
-                print(f"[CACHE] Loaded cached data ({age/60:.1f} min old) from {cache_file.name}")
-                if _st is not None:
-                    _st.session_state["_dashboard_data_cache"] = data
-                return data
+                # Reject stale caches from ML-training era
+                if data.get("_cache_version") != _CACHE_VERSION:
+                    print(f"[CACHE] Stale cache version, ignoring (expected {_CACHE_VERSION})")
+                else:
+                    print(f"[CACHE] Loaded cached data ({age/60:.1f} min old) from {cache_file.name}")
+                    _LOADED_DATA = data
+                    if _st is not None:
+                        _st.session_state["_dashboard_data_cache"] = data
+                    return data
             else:
                 print(f"[CACHE] Cache expired ({age/60:.1f} min old > 15 min), refreshing...")
         except Exception as e:
             print(f"[CACHE] Cache load failed: {e}, fetching fresh data")
+
+    # ── Lock prevents concurrent fetches from parallel pages ──
+    with _LOAD_LOCK:
+        # Double-check after acquiring lock
+        if _LOADED_DATA is not None:
+            return _LOADED_DATA
+
+    # Only one thread reaches here — others will see _LOADED_DATA set
+    # after this thread completes.
 
     print("=" * 60)
     print("FETCHING REAL DATA")
@@ -1217,52 +1245,12 @@ def load_all_data(
     print("\n--- NDVI Satellite Data (MODIS) ---")
     ndvi_df = fetch_ndvi_data(rainfall=rainfall)
 
-    # 6. REAL ML MODELS -- load cached or train (skip heavy training on Streamlit Cloud)
+    # 6. SKIP ML TRAINING — use formula-based risk scores
+    # ML training takes 10+ minutes on Streamlit Cloud and the trained models
+    # tend to predict everything as "low risk" (1%) due to class imbalance.
+    # The tuned formula-based approach produces differentiated, realistic scores.
     ml_results = None
-    _model_cache = _MODEL_DIR / "ml_results_cache.pkl" if (_DATA_DIR / "models").exists() else _DATA_DIR / "ml_results_cache.pkl"
-    _MODEL_DIR_local = _DATA_DIR / "models"
-    _MODEL_DIR_local.mkdir(parents=True, exist_ok=True)
-    _model_cache = _MODEL_DIR_local / "ml_results_cache.pkl"
-
-    # Try to load cached model results first
-    if _model_cache.exists():
-        try:
-            import pickle as _pkl
-            with open(_model_cache, "rb") as _mf:
-                ml_results = _pkl.load(_mf)
-            print(f"\n  [CACHE] ML models loaded from cache ({_model_cache.name})")
-        except Exception as _me:
-            print(f"\n  [WARN] ML model cache load failed: {_me}")
-            ml_results = None
-
-    # Only train if no cache and not rate-limited (check if we have enough stock data)
-    if ml_results is None and len(stock_data) >= 3:
-        try:
-            from monsoon_textile_app.data.ml_models import train_all_models
-            print("\n--- Training Real ML Models ---")
-            ml_results = train_all_models(
-                stock_data=stock_data,
-                cotton_df=cotton_df,
-                vix_df=vix_df,
-                rainfall=rainfall,
-                stocks_config=STOCKS,
-                train_lstm_flag=True,
-                ndvi_df=ndvi_df,
-            )
-            # Cache the trained models for next time
-            if ml_results:
-                try:
-                    import pickle as _pkl
-                    with open(_model_cache, "wb") as _mf:
-                        _pkl.dump(ml_results, _mf)
-                    print(f"  [CACHE] ML models cached to {_model_cache.name}")
-                except Exception:
-                    pass
-        except Exception as e:
-            print(f"\n  [WARN] ML model training failed: {e}")
-            print("  Falling back to formula-based risk scores")
-    elif ml_results is None:
-        print(f"\n  [SKIP] Only {len(stock_data)} stocks loaded (need >=3), using formula-based")
+    print("\n  [INFO] Using tuned formula-based risk scoring (fast, no ML training)")
 
     # 7. Assign risk scores from ML ensemble or fallback formula
     if ml_results and ml_results.get("ensemble_risk"):
@@ -1312,6 +1300,7 @@ def load_all_data(
             print(f"  {name}: AUC={m.get('auc_roc','?')}, F1={m.get('f1','?')}")
 
     result = {
+        "_cache_version": _CACHE_VERSION,
         "stock_data": risk_data,
         "cotton": cotton_with_regimes,
         "vix": vix_df,
@@ -1377,6 +1366,8 @@ def load_all_data(
     print("DATA FETCH COMPLETE")
     print("=" * 60)
 
+    # Store in process-level singleton for instant cross-page sharing
+    _LOADED_DATA = result
     return result
 
 

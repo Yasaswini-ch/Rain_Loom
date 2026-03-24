@@ -318,27 +318,14 @@ PRESETS = {
 }
 
 # ---------------------------------------------------------------------------
-# Load trained ML models for scenario prediction
+# ML models disabled — formula-based scoring is faster and more reliable.
+# XGBoost models trained on this dataset suffer from class imbalance and
+# predict ~1% risk for every scenario.  The tuned formula approach produces
+# differentiated, realistic scores instantly.
 # ---------------------------------------------------------------------------
 _XGB_MODELS = {}
 _FEATURE_COLS = []
 _ml_load_err = None
-
-# Try to load XGBoost models from the ML pipeline (same as other pages)
-try:
-    from monsoon_textile_app.data.fetch_real_data import load_all_data as _load_all
-    _all_data = _load_all()
-    _ml_details = _all_data.get("ml_details", {})
-    # The trained models are cached in the ml_models module after first run
-    from monsoon_textile_app.data.ml_models import load_trained_models, _FEATURE_COLS as _FC
-    _cached = load_trained_models()
-    if _cached and "xgboost" in _cached:
-        _FEATURE_COLS = list(_FC)
-        for ticker, xgb_data in _cached["xgboost"].items():
-            if "model" in xgb_data:
-                _XGB_MODELS[ticker] = xgb_data["model"]
-except Exception as e:
-    _ml_load_err = f"{type(e).__name__}: {e}"
 
 # Ticker -> display name mapping
 _TICKER_MAP = {
