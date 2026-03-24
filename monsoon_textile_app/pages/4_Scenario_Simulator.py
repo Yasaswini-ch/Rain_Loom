@@ -238,6 +238,46 @@ div[data-baseweb="slider"] {{
 section[data-testid="stVerticalBlock"] > div {{
     gap: 0.35rem;
 }}
+
+/* ── Animations ── */
+@keyframes fade-in-up {{
+    from {{ opacity: 0; transform: translateY(14px); }}
+    to   {{ opacity: 1; transform: translateY(0); }}
+}}
+@keyframes pulse-glow-red {{
+    0%,100% {{ box-shadow: 0 0 0 rgba(239,68,68,0); }}
+    50%      {{ box-shadow: 0 0 24px rgba(239,68,68,0.3); }}
+}}
+@keyframes pulse-glow-green {{
+    0%,100% {{ box-shadow: 0 0 0 rgba(16,185,129,0); }}
+    50%      {{ box-shadow: 0 0 24px rgba(16,185,129,0.2); }}
+}}
+@keyframes shimmer {{
+    0%   {{ background-position: -200% 0; }}
+    100% {{ background-position: 200% 0; }}
+}}
+@keyframes float-card {{
+    0%,100% {{ transform: translateY(0px); }}
+    50%      {{ transform: translateY(-4px); }}
+}}
+
+/* ── Apply animations to elements ── */
+.risk-card {{
+    animation: fade-in-up 0.5s ease both;
+}}
+.risk-card:hover {{
+    animation: float-card 2s ease-in-out infinite;
+    box-shadow: 0 12px 40px rgba(59,130,246,0.15);
+}}
+.glass-card {{
+    animation: fade-in-up 0.4s ease both;
+}}
+.interp-card {{
+    animation: fade-in-up 0.5s ease both;
+}}
+.section-heading {{
+    animation: fade-in-up 0.4s ease both;
+}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -604,6 +644,83 @@ for row_start in range(0, len(_stock_items), _NCOLS):
             </div>
             """, unsafe_allow_html=True)
 
+
+# ═══════════════════════════════════════════════════════════════════════════
+# VISUAL FEEDBACK BANNER — overall portfolio risk signal
+# ═══════════════════════════════════════════════════════════════════════════
+_avg_risk  = sum(r["risk"] for r in results.values()) / len(results)
+_max_risk  = max(r["risk"] for r in results.values())
+_max_stock = max(results, key=lambda k: results[k]["risk"])
+
+if _max_risk >= 0.80:
+    st.markdown(f"""
+<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);
+            border-left:4px solid #ef4444;border-radius:12px;padding:1.1rem 1.4rem;
+            margin:0.5rem 0 0.8rem;animation:fade-in-up 0.5s ease both;">
+    <div style="font-size:1.12rem;font-weight:700;color:#ef4444;margin-bottom:0.3rem;">
+        🚨 EXTREME RISK SCENARIO — Sector-wide volatility surge expected
+    </div>
+    <div style="font-size:0.96rem;color:#94a3b8;line-height:1.6;">
+        <b style="color:#e2e8f0;">{_max_stock}</b> is at highest risk
+        (<b style="color:#ef4444;">{_max_risk:.0%}</b>).
+        Portfolio average: <b style="color:#ef4444;">{_avg_risk:.0%}</b>.
+        <br><b>Recommended action:</b> Execute full hedge immediately.
+        Consider reducing textile sector allocation by 40–60%.
+        MCX cotton put options and NSE textile sector puts indicated.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+elif _max_risk >= 0.60:
+    st.markdown(f"""
+<div style="background:rgba(249,115,22,0.10);border:1px solid rgba(249,115,22,0.35);
+            border-left:4px solid #f97316;border-radius:12px;padding:1.1rem 1.4rem;
+            margin:0.5rem 0 0.8rem;animation:fade-in-up 0.5s ease both;">
+    <div style="font-size:1.12rem;font-weight:700;color:#f97316;margin-bottom:0.3rem;">
+        ⚠️ HIGH RISK — Supply chain stress is material
+    </div>
+    <div style="font-size:0.96rem;color:#94a3b8;line-height:1.6;">
+        <b style="color:#e2e8f0;">{_max_stock}</b> is most exposed
+        (<b style="color:#f97316;">{_max_risk:.0%}</b>).
+        Portfolio average: <b style="color:#f97316;">{_avg_risk:.0%}</b>.
+        <br><b>Recommended action:</b> Execute partial hedge (25–40% position).
+        Prioritise upstream spinners — Trident, KPR Mill, Vardhman.
+        Monitor IMD weekly rainfall bulletins.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+elif _max_risk >= 0.30:
+    st.markdown(f"""
+<div style="background:rgba(245,158,11,0.09);border:1px solid rgba(245,158,11,0.30);
+            border-left:4px solid #f59e0b;border-radius:12px;padding:1.1rem 1.4rem;
+            margin:0.5rem 0 0.8rem;animation:fade-in-up 0.5s ease both;">
+    <div style="font-size:1.12rem;font-weight:700;color:#f59e0b;margin-bottom:0.3rem;">
+        📊 MODERATE RISK — Watch and prepare
+    </div>
+    <div style="font-size:0.96rem;color:#94a3b8;line-height:1.6;">
+        <b style="color:#e2e8f0;">{_max_stock}</b> leads risk
+        (<b style="color:#f59e0b;">{_max_risk:.0%}</b>).
+        Portfolio average: <b style="color:#f59e0b;">{_avg_risk:.0%}</b>.
+        <br><b>Recommended action:</b> Prepare hedge instruments but hold.
+        Increase monitoring frequency to daily. Watch cotton futures momentum.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+else:
+    st.markdown(f"""
+<div style="background:rgba(16,185,129,0.09);border:1px solid rgba(16,185,129,0.28);
+            border-left:4px solid #10b981;border-radius:12px;padding:1.1rem 1.4rem;
+            margin:0.5rem 0 0.8rem;animation:fade-in-up 0.5s ease both;">
+    <div style="font-size:1.12rem;font-weight:700;color:#10b981;margin-bottom:0.3rem;">
+        ✅ LOW RISK — Conditions normal
+    </div>
+    <div style="font-size:0.96rem;color:#94a3b8;line-height:1.6;">
+        All stocks below moderate threshold.
+        Portfolio average: <b style="color:#10b981;">{_avg_risk:.0%}</b>.
+        <br><b>Recommended action:</b> No hedging required.
+        Maintain regular weekly monitoring. Normal monsoon conditions supportive of margins.
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════
 # RISK PROBABILITY BAR CHART — refined grouped bar with error bars

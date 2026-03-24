@@ -1,5 +1,13 @@
 # RainLoom
 
+[![Live App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://rainloomtextiles.streamlit.app)
+![AUC-ROC](https://img.shields.io/badge/AUC--ROC-0.81-brightgreen)
+![F-Stat](https://img.shields.io/badge/IV%20F--Stat-5.8-blue)
+![Stocks](https://img.shields.io/badge/NSE%20Stocks-8-orange)
+![Districts](https://img.shields.io/badge/Districts%20Monitored-83-teal)
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![License](https://img.shields.io/badge/License-Educational-lightgrey)
+
 ### When the monsoon falters, the market unravels.
 
 > A causal machine learning system that predicts Indian NSE textile stock volatility from monsoon rainfall deficits — bridging climate science, cotton markets, and equity risk management with live data, AI advisories, and geospatial nowcasting.
