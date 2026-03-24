@@ -1174,13 +1174,13 @@ def load_all_data(
     print("\n--- NSE Textile Stocks ---")
     stock_data = fetch_stock_data(start=start)
 
-    _time.sleep(1.5)   # brief pause between yfinance call groups
+    _time.sleep(0.5)   # brief pause between yfinance call groups
 
     # 2. Cotton futures (ICE CT=F)
     print("\n--- ICE Cotton Futures (CT=F) ---")
     cotton_df = fetch_cotton_futures(start=start)
 
-    _time.sleep(1.0)
+    _time.sleep(0.3)
 
     # 3. India VIX
     print("\n--- India VIX ---")
@@ -1200,50 +1200,44 @@ def load_all_data(
     print(f"  [OK] Rainfall: {len(rainfall['annual_deficit'])} annual records, "
           f"{len(rainfall['weekly_rainfall'])} weekly records")
 
-    # 4b. Supplement with live Open-Meteo rainfall for recent period
+    # 4b. Live Open-Meteo rainfall — SKIPPED for fast startup
+    # Open-Meteo makes 10 sequential HTTP calls (one per state) which adds
+    # 30-150 seconds.  Historical/synthetic rainfall is sufficient for the demo.
     print("\n--- Live Rainfall Data (Open-Meteo API) ---")
-    try:
-        live_rain = fetch_live_imd_rainfall()
-        if not live_rain.empty:
-            # Pivot to wide format (date x state) for merging with weekly_rainfall
-            live_daily_wide = live_rain.pivot_table(
-                index="date", columns="state", values="daily_rainfall_mm", aggfunc="first"
-            )
-            # Resample to weekly to match weekly_rainfall format
-            live_weekly = live_daily_wide.resample("W-SUN").sum()
-            live_weekly = live_weekly.dropna(how="all")
-
-            # Merge: update weekly_rainfall with live data for overlapping dates,
-            # and extend the index for any new dates
-            existing_weekly = rainfall["weekly_rainfall"]
-            combined_index = existing_weekly.index.union(live_weekly.index).sort_values()
-            merged = existing_weekly.reindex(combined_index)
-
-            for state in live_weekly.columns:
-                if state in merged.columns:
-                    # Overwrite with live data where available
-                    merged.loc[live_weekly.index, state] = live_weekly[state]
-
-            merged = merged.fillna(0)
-            rainfall["weekly_rainfall"] = merged
-            rainfall["live_rainfall_daily"] = live_rain
-
-            print(f"  [OK] Weekly rainfall extended to {merged.index.max().date()}, "
-                  f"{len(merged)} total weeks")
-        else:
-            print("  [SKIP] No live rainfall data available")
-    except Exception as e:
-        print(f"  [WARN] Live rainfall fetch failed: {e}")
-        print("  Continuing with historical/synthetic data only")
+    print("  [SKIP] Disabled for fast startup — using historical data")
 
     # 5. Cotton regimes (basic -- will be replaced by GARCH if ML succeeds)
     print("\n--- Cotton Regime Detection ---")
     cotton_with_regimes = compute_cotton_regimes(cotton_df)
     print(f"  [OK] Basic regimes computed for {len(cotton_with_regimes)} weeks")
 
-    # 5b. NDVI satellite data (MODIS)
-    print("\n--- NDVI Satellite Data (MODIS) ---")
-    ndvi_df = fetch_ndvi_data(rainfall=rainfall)
+    # 5b. NDVI satellite data — use rainfall proxy instead of slow MODIS API
+    # MODIS API makes 10 sequential calls with 30s timeout each = up to 5 min
+    print("\n--- NDVI Satellite Data ---")
+    print("  [INFO] Using rainfall-based NDVI proxy (fast, no MODIS API)")
+    ndvi_df = pd.DataFrame(columns=["date", "state", "ndvi_value"])
+    if "weekly_rainfall" in rainfall:
+        try:
+            proxy_records = []
+            for state in list(_STATE_BOUNDS.keys()):
+                wr = rainfall["weekly_rainfall"]
+                if state not in wr.columns:
+                    continue
+                rain_s = wr[state].dropna()
+                if rain_s.empty:
+                    continue
+                rmin, rmax = rain_s.min(), rain_s.max()
+                rng = rmax - rmin
+                norm = (rain_s - rmin) / rng if rng > 0 else pd.Series(0.5, index=rain_s.index)
+                ndvi_proxy = (0.2 + 0.5 * norm).clip(0.0, 1.0)
+                ndvi_16d = ndvi_proxy.resample("16D").mean().dropna()
+                for dt, val in ndvi_16d.items():
+                    proxy_records.append({"date": pd.Timestamp(dt), "state": state, "ndvi_value": float(val)})
+            if proxy_records:
+                ndvi_df = pd.DataFrame(proxy_records).sort_values(["date", "state"]).reset_index(drop=True)
+                print(f"  [OK] NDVI proxy: {len(ndvi_df)} records across {ndvi_df['state'].nunique()} states")
+        except Exception as e:
+            print(f"  [WARN] NDVI proxy failed: {e}")
 
     # 6. SKIP ML TRAINING — use formula-based risk scores
     # ML training takes 10+ minutes on Streamlit Cloud and the trained models

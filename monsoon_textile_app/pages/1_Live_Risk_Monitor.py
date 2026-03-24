@@ -29,16 +29,9 @@ render_navbar(active_page="Risk Monitor")
 render_chat_bubble()
 
 # ---------------------------------------------------------------------------
-# Attempt to load real data; fall back to demo generation
+# Load real data module
 # ---------------------------------------------------------------------------
-_DEMO_MODE = False
-
-try:
-    from monsoon_textile_app.data.fetch_real_data import load_risk_monitor_data, STOCKS as _REAL_STOCKS
-    _USE_REAL_DATA = True
-except Exception:
-    _USE_REAL_DATA = False
-    _DEMO_MODE = True
+from monsoon_textile_app.data.fetch_real_data import load_risk_monitor_data, STOCKS as _REAL_STOCKS
 
 # ---------------------------------------------------------------------------
 # Shared chart defaults
@@ -85,20 +78,6 @@ st.markdown("""
     padding-bottom: 0.45rem;
     border-bottom: 2px solid transparent;
     border-image: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6, transparent) 1;
-}
-
-/* ---- demo badge ---- */
-.demo-badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: #0a0f1e;
-    font-size: 0.80rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    padding: 3px 10px;
-    border-radius: 4px;
-    margin-left: 12px;
-    vertical-align: middle;
 }
 
 /* ---- page title row ---- */
@@ -192,16 +171,7 @@ st.markdown("""
 # ---------------------------------------------------------------------------
 # Stocks metadata
 # ---------------------------------------------------------------------------
-if _USE_REAL_DATA:
-    STOCKS = {k: v for k, v in _REAL_STOCKS.items()}
-else:
-    STOCKS = {
-        "ARVIND.NS":     {"name": "Arvind Ltd",      "chain": "Integrated",  "dep": 72},
-        "TRIDENT.NS":    {"name": "Trident Ltd",     "chain": "Upstream",    "dep": 78},
-        "KPRMILL.NS":    {"name": "KPR Mill",        "chain": "Upstream",    "dep": 80},
-        "WELSPUNLIV.NS": {"name": "Welspun Living",  "chain": "Downstream",  "dep": 65},
-        "RSWM.NS":       {"name": "RSWM Ltd",        "chain": "Upstream",    "dep": 75},
-    }
+STOCKS = {k: v for k, v in _REAL_STOCKS.items()}
 
 STOCK_COLORS = {
     "ARVIND.NS":     "#60a5fa",
@@ -250,74 +220,16 @@ def _risk_label(score: float) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Demo data generation
-# ---------------------------------------------------------------------------
-
-def _generate_demo_data():
-    """Realistic synthetic data for all dashboard components."""
-    np.random.seed(42)
-    dates = pd.date_range("2024-06-01", periods=120, freq="W")
-
-    stock_data = {}
-    for sym in STOCKS:
-        base_risk = np.random.uniform(0.15, 0.45)
-        seasonal = 0.25 * np.sin(np.linspace(0, 2 * np.pi, len(dates)))
-        noise = np.random.normal(0, 0.08, len(dates))
-        risk = np.clip(base_risk + seasonal + noise, 0.02, 0.98)
-        price = 100 + np.cumsum(np.random.normal(0.1, 2.5, len(dates)))
-        vol = np.abs(0.15 + 0.35 * risk + np.random.normal(0, 0.03, len(dates)))
-        stock_data[sym] = pd.DataFrame({
-            "date": dates,
-            "risk_score": risk,
-            "price": price,
-            "vol_20d": vol,
-        })
-
-    # Rainfall deficit
-    states = [
-        "Gujarat", "Maharashtra", "Telangana", "Tamil Nadu",
-        "Rajasthan", "Madhya Pradesh", "Karnataka", "Andhra Pradesh",
-    ]
-    deficits = [-28, -18, -22, -8, -15, -12, -5, -10]
-    rainfall_df = pd.DataFrame({"State": states, "Deficit": deficits})
-
-    # Cotton futures
-    cotton_dates = pd.date_range("2024-01-01", periods=52, freq="W")
-    cotton_price = 55000 + np.cumsum(np.random.normal(100, 800, 52))
-    regime_prob = np.clip(
-        0.2 + 0.4 * np.sin(np.linspace(0, np.pi, 52))
-        + np.random.normal(0, 0.1, 52),
-        0, 1,
-    )
-    cotton_df = pd.DataFrame({
-        "date": cotton_dates,
-        "price": cotton_price,
-        "regime_prob": regime_prob,
-    })
-
-    return stock_data, rainfall_df, cotton_df
-
-
-# ---------------------------------------------------------------------------
 # Load data — show loading indicator instead of blank screen
 # ---------------------------------------------------------------------------
-if _USE_REAL_DATA:
-    try:
-        with st.spinner("Loading live data from NSE, IMD, MCX, NOAA..."):
-            stock_data, rainfall_df, cotton_df = load_risk_monitor_data()
-        _DEMO_MODE = False
-    except Exception:
-        stock_data, rainfall_df, cotton_df = _generate_demo_data()
-        _DEMO_MODE = True
-else:
-    stock_data, rainfall_df, cotton_df = _generate_demo_data()
-
+with st.spinner("Loading live data from NSE, IMD & NOAA..."):
+    stock_data, rainfall_df, cotton_df = load_risk_monitor_data()
 
 
 # ---------------------------------------------------------------------------
 # PAGE HEADER with live status
 # ---------------------------------------------------------------------------
-header_badge = '<span class="demo-badge">DEMO MODE</span>' if _DEMO_MODE else ""
+header_badge = ""
 
 # Market status: NSE is open Mon-Fri 09:15-15:30 IST (UTC+5:30)
 _IST = _dt.timezone(_dt.timedelta(hours=5, minutes=30))
@@ -383,33 +295,32 @@ if _auto_refresh:
     )
 
 # Live price ticker strip for tracked stocks
-if not _DEMO_MODE:
-    _ticker_items = ""
-    for _tk, _sdf in stock_data.items():
-        _info = STOCKS[_tk]
-        _latest_price = float(_sdf["price"].iloc[-1])
-        _prev_price = float(_sdf["price"].iloc[-2]) if len(_sdf) > 1 else _latest_price
-        _pct_change = ((_latest_price - _prev_price) / _prev_price) * 100
-        _chg_color = "#34d399" if _pct_change >= 0 else "#ef4444"
-        _chg_arrow = "+" if _pct_change >= 0 else ""
-        _ticker_items += (
-            f'<div style="display:flex; align-items:center; gap:8px; padding:0 12px; '
-            f'border-right:1px solid rgba(255,255,255,0.06);">'
-            f'<span style="color:#e2e8f0; font-weight:600; font-size:0.88rem;">{_info["name"]}</span>'
-            f'<span style="color:#c5cdd8; font-size:0.88rem;">Rs{_latest_price:,.1f}</span>'
-            f'<span style="color:{_chg_color}; font-size:0.82rem; font-weight:500;">'
-            f'{_chg_arrow}{_pct_change:.1f}%</span>'
-            f'</div>'
-        )
-    st.markdown(
-        f'<div style="display:flex; align-items:center; gap:0; overflow-x:auto; '
-        f'padding:8px 4px; margin-bottom:0.8rem; '
-        f'background:rgba(15,20,35,0.5); border:1px solid rgba(255,255,255,0.05); '
-        f'border-radius:8px;">'
-        f'{_ticker_items}'
-        f'</div>',
-        unsafe_allow_html=True,
+_ticker_items = ""
+for _tk, _sdf in stock_data.items():
+    _info = STOCKS[_tk]
+    _latest_price = float(_sdf["price"].iloc[-1])
+    _prev_price = float(_sdf["price"].iloc[-2]) if len(_sdf) > 1 else _latest_price
+    _pct_change = ((_latest_price - _prev_price) / _prev_price) * 100
+    _chg_color = "#34d399" if _pct_change >= 0 else "#ef4444"
+    _chg_arrow = "+" if _pct_change >= 0 else ""
+    _ticker_items += (
+        f'<div style="display:flex; align-items:center; gap:8px; padding:0 12px; '
+        f'border-right:1px solid rgba(255,255,255,0.06);">'
+        f'<span style="color:#e2e8f0; font-weight:600; font-size:0.88rem;">{_info["name"]}</span>'
+        f'<span style="color:#c5cdd8; font-size:0.88rem;">Rs{_latest_price:,.1f}</span>'
+        f'<span style="color:{_chg_color}; font-size:0.82rem; font-weight:500;">'
+        f'{_chg_arrow}{_pct_change:.1f}%</span>'
+        f'</div>'
     )
+st.markdown(
+    f'<div style="display:flex; align-items:center; gap:0; overflow-x:auto; '
+    f'padding:8px 4px; margin-bottom:0.8rem; '
+    f'background:rgba(15,20,35,0.5); border:1px solid rgba(255,255,255,0.05); '
+    f'border-radius:8px;">'
+    f'{_ticker_items}'
+    f'</div>',
+    unsafe_allow_html=True,
+)
 
 with st.expander("Understanding this page"):
     st.markdown(
@@ -523,11 +434,10 @@ if fetch_btn and custom_ticker:
 
             # Get state-level deficit from real data
             state_deficit = 0.0
-            if not _DEMO_MODE:
-                for _, r in rainfall_df.iterrows():
-                    if r["State"] == user_primary_state:
-                        state_deficit = float(r["Deficit"])
-                        break
+            for _, r in rainfall_df.iterrows():
+                if r["State"] == user_primary_state:
+                    state_deficit = float(r["Deficit"])
+                    break
 
             # Climate signal: negative deficit = drought = higher risk
             climate_risk = max(0, -state_deficit / 50)
@@ -539,7 +449,7 @@ if fetch_btn and custom_ticker:
 
             # Cotton price signal from dashboard data
             cotton_risk = 0.3
-            if not _DEMO_MODE and not cotton_df.empty:
+            if not cotton_df.empty:
                 cotton_ret = cotton_df["price"].pct_change(4).iloc[-1]
                 cotton_risk = min(1.0, abs(float(cotton_ret)) * 5) if pd.notna(cotton_ret) else 0.3
 
