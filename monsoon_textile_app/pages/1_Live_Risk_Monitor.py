@@ -299,11 +299,12 @@ def _generate_demo_data():
 
 
 # ---------------------------------------------------------------------------
-# Load data
+# Load data — show loading indicator instead of blank screen
 # ---------------------------------------------------------------------------
 if _USE_REAL_DATA:
     try:
-        stock_data, rainfall_df, cotton_df = load_risk_monitor_data()
+        with st.spinner("Loading live data from NSE, IMD, MCX, NOAA..."):
+            stock_data, rainfall_df, cotton_df = load_risk_monitor_data()
         _DEMO_MODE = False
     except Exception:
         stock_data, rainfall_df, cotton_df = _generate_demo_data()
@@ -984,18 +985,16 @@ with right_col:
         ),
     )
     fig_cotton.update_yaxes(
-        title_text="Price (Rs/candy)",
+        title=dict(text="Price (Rs/candy)", font=dict(size=13)),
         showgrid=False,
         tickfont=dict(size=12),
-        title_font=dict(size=13),
         secondary_y=False,
     )
     fig_cotton.update_yaxes(
-        title_text="Regime Probability",
+        title=dict(text="Regime Probability", font=dict(size=13)),
         range=[0, 1],
         showgrid=False,
         tickfont=dict(size=12),
-        title_font=dict(size=13),
         secondary_y=True,
     )
     fig_cotton.update_xaxes(

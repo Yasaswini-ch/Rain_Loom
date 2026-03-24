@@ -27,7 +27,8 @@ render_chat_bubble()
 _REAL_DATA = None
 try:
     from monsoon_textile_app.data.fetch_real_data import load_all_data
-    _REAL_DATA = load_all_data()
+    with st.spinner("Loading causal analysis data from live sources..."):
+        _REAL_DATA = load_all_data()
 except Exception:
     pass
 

@@ -29,7 +29,8 @@ _REAL_METRICS = None
 _ML_DETAILS = None
 try:
     from monsoon_textile_app.data.fetch_real_data import load_all_data
-    _rd = load_all_data()
+    with st.spinner("Loading model performance data..."):
+        _rd = load_all_data()
     _REAL_METRICS = _rd.get("model_metrics", None)
     _ML_DETAILS = _rd.get("ml_details", None)
 except Exception:

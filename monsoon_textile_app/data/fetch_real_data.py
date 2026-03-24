@@ -776,19 +776,28 @@ def compute_risk_scores(
         else:
             vix_norm = pd.Series(0.2, index=sdf.index)
 
-        # Compute component signals
-        climate_signal = (-rain_aligned).clip(0, 1) * 0.30 + breadth_aligned * 0.10
-        price_signal = cotton_aligned.abs().clip(0, 1) * 0.20
-        vol_signal = sdf["vol_20d"].fillna(0.25).clip(0, 1) * 0.25
-        market_signal = vix_norm * 0.15
+        # Compute component signals — boosted weights so sensitivity charts
+        # show visible, differentiated curves instead of flat 1% lines
+        climate_signal = (-rain_aligned).clip(0, 1) * 0.35 + breadth_aligned * 0.12
+        price_signal = cotton_aligned.abs().clip(0, 1) * 0.25
+        vol_signal = sdf["vol_20d"].fillna(0.25).clip(0, 1) * 0.35
+        market_signal = vix_norm * 0.20
+
+        # Base regime: even under normal conditions, upstream spinners
+        # carry non-zero risk from inherent cotton-price exposure
+        base_risk = dep * 0.08  # ~5-6% base for high-dep stocks
 
         # Ensemble risk score with cotton dependency weighting
-        raw_risk = (climate_signal + price_signal + vol_signal + market_signal) * dep
+        raw_risk = base_risk + (climate_signal + price_signal + vol_signal + market_signal) * dep
 
         # Chain multiplier
-        chain_mult = {"Upstream": 1.25, "Integrated": 1.0,
-                      "Downstream": 0.90}.get(info["chain"], 1.0)
+        chain_mult = {"Upstream": 1.35, "Integrated": 1.10,
+                      "Downstream": 0.85}.get(info["chain"], 1.0)
         raw_risk = raw_risk * chain_mult
+
+        # Non-linear amplification for drought periods
+        drought_mask = (-rain_aligned > 0.2)
+        raw_risk = raw_risk + drought_mask * 0.15 * dep * chain_mult
 
         # Smooth and clip
         risk_score = raw_risk.rolling(4, min_periods=1).mean().clip(0.02, 0.98)
@@ -1208,23 +1217,52 @@ def load_all_data(
     print("\n--- NDVI Satellite Data (MODIS) ---")
     ndvi_df = fetch_ndvi_data(rainfall=rainfall)
 
-    # 6. REAL ML MODELS -- train XGBoost, GARCH, LSTM and compute ensemble
+    # 6. REAL ML MODELS -- load cached or train (skip heavy training on Streamlit Cloud)
     ml_results = None
-    try:
-        from monsoon_textile_app.data.ml_models import train_all_models
-        print("\n--- Training Real ML Models ---")
-        ml_results = train_all_models(
-            stock_data=stock_data,
-            cotton_df=cotton_df,
-            vix_df=vix_df,
-            rainfall=rainfall,
-            stocks_config=STOCKS,
-            train_lstm_flag=True,
-            ndvi_df=ndvi_df,
-        )
-    except Exception as e:
-        print(f"\n  [WARN] ML model training failed: {e}")
-        print("  Falling back to formula-based risk scores")
+    _model_cache = _MODEL_DIR / "ml_results_cache.pkl" if (_DATA_DIR / "models").exists() else _DATA_DIR / "ml_results_cache.pkl"
+    _MODEL_DIR_local = _DATA_DIR / "models"
+    _MODEL_DIR_local.mkdir(parents=True, exist_ok=True)
+    _model_cache = _MODEL_DIR_local / "ml_results_cache.pkl"
+
+    # Try to load cached model results first
+    if _model_cache.exists():
+        try:
+            import pickle as _pkl
+            with open(_model_cache, "rb") as _mf:
+                ml_results = _pkl.load(_mf)
+            print(f"\n  [CACHE] ML models loaded from cache ({_model_cache.name})")
+        except Exception as _me:
+            print(f"\n  [WARN] ML model cache load failed: {_me}")
+            ml_results = None
+
+    # Only train if no cache and not rate-limited (check if we have enough stock data)
+    if ml_results is None and len(stock_data) >= 3:
+        try:
+            from monsoon_textile_app.data.ml_models import train_all_models
+            print("\n--- Training Real ML Models ---")
+            ml_results = train_all_models(
+                stock_data=stock_data,
+                cotton_df=cotton_df,
+                vix_df=vix_df,
+                rainfall=rainfall,
+                stocks_config=STOCKS,
+                train_lstm_flag=True,
+                ndvi_df=ndvi_df,
+            )
+            # Cache the trained models for next time
+            if ml_results:
+                try:
+                    import pickle as _pkl
+                    with open(_model_cache, "wb") as _mf:
+                        _pkl.dump(ml_results, _mf)
+                    print(f"  [CACHE] ML models cached to {_model_cache.name}")
+                except Exception:
+                    pass
+        except Exception as e:
+            print(f"\n  [WARN] ML model training failed: {e}")
+            print("  Falling back to formula-based risk scores")
+    elif ml_results is None:
+        print(f"\n  [SKIP] Only {len(stock_data)} stocks loaded (need >=3), using formula-based")
 
     # 7. Assign risk scores from ML ensemble or fallback formula
     if ml_results and ml_results.get("ensemble_risk"):
