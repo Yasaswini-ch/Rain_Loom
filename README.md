@@ -1,7 +1,7 @@
 # RainLoom
 
 [![Live App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://rainloomtextiles.streamlit.app)
-[![Landing Page](https://img.shields.io/badge/Landing_Page-Vercel-black?logo=vercel)](https://rain-loom-zeta.vercel.app/)
+[![Landing Page](https://img.shields.io/badge/Landing_Page-Vercel-black?logo=vercel)](https://rainloom.vercel.app/)
 ![AUC-ROC](https://img.shields.io/badge/AUC--ROC-0.81-brightgreen)
 ![F-Stat](https://img.shields.io/badge/IV%20F--Stat-5.8-blue)
 ![Stocks](https://img.shields.io/badge/NSE%20Stocks-8-orange)
