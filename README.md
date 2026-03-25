@@ -1,6 +1,7 @@
 # RainLoom
 
 [![Live App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://rainloomtextiles.streamlit.app)
+[![Landing Page](https://img.shields.io/badge/Landing_Page-Vercel-black?logo=vercel)](https://rain-loom.vercel.app)
 ![AUC-ROC](https://img.shields.io/badge/AUC--ROC-0.81-brightgreen)
 ![F-Stat](https://img.shields.io/badge/IV%20F--Stat-5.8-blue)
 ![Stocks](https://img.shields.io/badge/NSE%20Stocks-8-orange)
@@ -11,6 +12,10 @@
 ### When the monsoon falters, the market unravels.
 
 > A causal machine learning system that predicts Indian NSE textile stock volatility from monsoon rainfall deficits — bridging climate science, cotton markets, and equity risk management with live data, AI advisories, and geospatial nowcasting.
+
+<p align="center">
+  <img src="landing/images/hero-cotton-field.png" width="700" alt="RainLoom — Monsoon x Textile Markets" />
+</p>
 
 ---
 
@@ -125,6 +130,22 @@ uvicorn monsoon_textile_app.api.app:app --host 0.0.0.0 --port 8000
 
 API docs at [http://localhost:8000/api/docs](http://localhost:8000/api/docs).
 
+### Landing Page (Vercel)
+
+```bash
+# Deploy the static landing page to Vercel
+cd landing
+npx vercel --prod
+```
+
+Or via Vercel dashboard:
+1. Import the `Rain_Loom` GitHub repo
+2. Set **Root Directory** to `landing`
+3. **Framework Preset**: Other
+4. **Build Command**: leave empty (static site)
+5. **Output Directory**: `.` (current directory)
+6. Deploy
+
 ### Docker
 
 ```bash
@@ -161,6 +182,10 @@ docker run -p 8501:8501 rainloom
 
 ## Architecture
 
+<p align="center">
+  <img src="landing/images/causal-chain.png" width="650" alt="Causal Chain: Monsoon → Yield → Input Costs → Stock Volatility" />
+</p>
+
 ### Data Pipeline
 ```
 IMD Rainfall + NSE Stocks + Cotton Futures + Macro Indicators + ENSO ONI
@@ -186,6 +211,10 @@ IMD Rainfall + NSE Stocks + Cotton Futures + Macro Indicators + ENSO ONI
   Dashboard · Geospatial Map · AI Advisor · REST API · Email Alerts
 ```
 
+<p align="center">
+  <img src="landing/images/ml-ensemble.png" width="650" alt="ML Ensemble: GARCH + XGBoost + LSTM → Stacked Ensemble → Probability Score" />
+</p>
+
 ### Three-Layer Ensemble
 
 | Layer | Model | Weight | Strengths |
@@ -195,6 +224,10 @@ IMD Rainfall + NSE Stocks + Cotton Futures + Macro Indicators + ENSO ONI
 | 3 | Stacked LSTM | 30% | Sequential memory, attention mechanism |
 
 Risk scores map to four regimes: **LOW** (0–30%), **MODERATE** (30–60%), **HIGH** (60–80%), **EXTREME** (80–100%).
+
+<p align="center">
+  <img src="landing/images/portfolio-backtest.png" width="650" alt="Portfolio Performance: 2009 Indian Drought Year — Hedged vs Unhedged" />
+</p>
 
 ### REST API Endpoints
 
@@ -213,6 +246,12 @@ Risk scores map to four regimes: **LOW** (0–30%), **MODERATE** (30–60%), **H
 
 ```
 Rain_Loom/
+├── landing/                       # Static landing page (deploy to Vercel/Netlify)
+│   ├── index.html                 # Main page
+│   ├── style.css                  # Styles
+│   ├── script.js                  # Animations & interactions
+│   ├── vercel.json                # Vercel deployment config
+│   └── images/                    # Hero, architecture, backtest images
 ├── configs/
 │   └── settings.yaml              # Model hyperparams, thresholds, data sources
 ├── monsoon_textile_app/

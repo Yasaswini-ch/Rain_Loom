@@ -874,7 +874,7 @@ _guide_pages = [
         "accent": "#3b82f6",
         "title": "Risk Monitor",
         "desc": (
-            "Real-time risk scores for 5 NSE textile stocks. Gauge indicators display "
+            "Real-time risk scores for 8 NSE textile stocks. Gauge indicators display "
             "the ensemble risk level for each security. A rainfall deficit map highlights "
             "stressed cotton-belt states across India. Position alerts flag when risk "
             "crosses actionable thresholds."
@@ -1014,7 +1014,7 @@ _data_sources = pd.DataFrame({
     "Data": [
         "0.25 deg daily rainfall grid, 2000-2025",
         "900+ daily observations across 10 cotton-belt states",
-        "5 textile stocks + Nifty50 + India VIX",
+        "8 textile stocks + Nifty50 + India VIX",
         "MCX Cotton (primary) or ICE CT=F with real forex conversion",
         "MOD13Q1 250m vegetation index for 10 states",
         "USD/INR exchange rate, Brent Crude",
