@@ -351,8 +351,14 @@ def _fetch_district_rainfall_live() -> pd.DataFrame:
             deficit_pct = 0.0
             actual_mm = expected_mm
 
-        # Classify severity
-        if deficit_pct < -30:
+        # Classify severity -- when the 30-day normal is very low (< 30 mm),
+        # percentage deficits are misleading (e.g. -100% in dry season).
+        # Mark those districts as "Dry Season" instead.
+        DRY_SEASON_NORMAL_THRESHOLD = 30  # mm
+        if expected_mm < DRY_SEASON_NORMAL_THRESHOLD:
+            severity, color_val = "Dry Season — Normal", 0
+            deficit_pct = 0.0  # not meaningful
+        elif deficit_pct < -30:
             severity, color_val = "Severe Deficit", -40
         elif deficit_pct < -15:
             severity, color_val = "Moderate Deficit", -25
@@ -392,6 +398,11 @@ def _generate_district_data(rainfall_data: dict) -> pd.DataFrame:
         pass
 
     # Fallback: use state-level data with spatial variation
+    from datetime import datetime as _dt_fb
+    _fb_month = _dt_fb.now().month
+    _fb_frac = _MONTHLY_RAIN_FRAC.get(_fb_month, 0.03)
+    DRY_SEASON_NORMAL_THRESHOLD = 30  # mm
+
     rows = []
     annual_deficit = rainfall_data.get("annual_deficit", pd.DataFrame()) if isinstance(rainfall_data, dict) else pd.DataFrame()
 
@@ -405,9 +416,13 @@ def _generate_district_data(rainfall_data: dict) -> pd.DataFrame:
             lat, lon = _DISTRICT_COORDS.get(district, (_STATE_CENTROIDS[state]["lat"], _STATE_CENTROIDS[state]["lon"]))
             deficit = state_deficit
             lpa = _STATE_LPA.get(state, 700)
+            monthly_normal = lpa * _fb_frac
             rainfall_mm = lpa * (1 + deficit / 100)
 
-            if deficit < -30:
+            if monthly_normal < DRY_SEASON_NORMAL_THRESHOLD:
+                severity, color_val = "Dry Season — Normal", 0
+                deficit = 0.0
+            elif deficit < -30:
                 severity, color_val = "Severe Deficit", -40
             elif deficit < -15:
                 severity, color_val = "Moderate Deficit", -25
@@ -434,6 +449,32 @@ _rainfall = _REAL_DATA.get("rainfall", {}) if _REAL_DATA else {}
 _district_df = _generate_district_data(_rainfall)
 
 # =========================================================================
+# SEASONAL BANNER -- outside JJAS, deficit % is less meaningful
+# =========================================================================
+from datetime import datetime as _dt
+_current_month = _dt.now().month
+_is_monsoon = _current_month in (6, 7, 8, 9)
+_dry_count = int((_district_df["severity"] == "Dry Season — Normal").sum()) if "severity" in _district_df.columns else 0
+
+if not _is_monsoon:
+    _month_name = _dt.now().strftime("%B")
+    render_html(f"""
+    <div class="glass-card" style="border-color:rgba(59,130,246,0.35); padding:1rem 1.4rem; margin-bottom:1.2rem;">
+        <div style="color:#60a5fa; font-weight:600; font-size:1.05rem;">
+            &#x1f4c5; Pre/Post-Monsoon Season ({_month_name})
+        </div>
+        <div style="color:#94a3b8; font-size:0.95rem; margin-top:0.3rem; line-height:1.5;">
+            Deficit calculations are most meaningful during <strong style="color:#e2e8f0;">JJAS (June–September)</strong>.
+            In the current month, climatological normals are very low for most districts, so percentage
+            deficits can appear extreme (e.g. &minus;100%) even though near-zero rainfall is expected.
+            Districts with 30-day normals below 30 mm are shown as <strong style="color:#60a5fa;">Dry Season — Normal</strong>
+            and excluded from the stressed-districts table.
+            {f'<br><span style="color:#64748b; font-size:0.88rem;">{_dry_count} of {len(_district_df)} districts are in dry-season mode.</span>' if _dry_count > 0 else ''}
+        </div>
+    </div>
+    """)
+
+# =========================================================================
 # FILTERS
 # =========================================================================
 st.markdown("""
@@ -453,10 +494,13 @@ with filter_cols[0]:
     )
 
 with filter_cols[1]:
+    _sev_options = ["Severe Deficit", "Moderate Deficit", "Mild Deficit", "Normal", "Excess"]
+    if _dry_count > 0:
+        _sev_options.append("Dry Season — Normal")
     severity_filter = st.multiselect(
         "Filter by Severity",
-        options=["Severe Deficit", "Moderate Deficit", "Mild Deficit", "Normal", "Excess"],
-        default=["Severe Deficit", "Moderate Deficit", "Mild Deficit", "Normal", "Excess"],
+        options=_sev_options,
+        default=_sev_options,
         key="geo_severity_filter",
     )
 
@@ -517,6 +561,10 @@ if not _filtered.empty:
         text=_filtered.apply(
             lambda r: (
                 f"<b>{r['district']}</b>, {r['state']}<br>"
+                f"30d Actual: {r['rainfall_mm']:.1f} mm (Normal: {r['lpa_mm']:.1f} mm)<br>"
+                f"Status: {r['severity']}"
+            ) if r['severity'] == "Dry Season — Normal" else (
+                f"<b>{r['district']}</b>, {r['state']}<br>"
                 f"Deficit: <b>{r['deficit_pct']:+.1f}%</b><br>"
                 f"30d Actual: {r['rainfall_mm']:.1f} mm (Normal: {r['lpa_mm']:.1f} mm)<br>"
                 f"Status: {r['severity']}"
@@ -557,16 +605,28 @@ _total = len(_filtered)
 _severe = len(_filtered[_filtered["severity"] == "Severe Deficit"])
 _moderate = len(_filtered[_filtered["severity"] == "Moderate Deficit"])
 _normal = len(_filtered[_filtered["severity"].isin(["Normal", "Excess"])])
-_avg_deficit = _filtered["deficit_pct"].mean() if _total > 0 else 0
+_dry_season = len(_filtered[_filtered["severity"] == "Dry Season — Normal"])
+# Exclude dry-season districts from average deficit (their 0% is artificial)
+_non_dry = _filtered[_filtered["severity"] != "Dry Season — Normal"]
+_avg_deficit = _non_dry["deficit_pct"].mean() if len(_non_dry) > 0 else 0
 
 _m_cols = st.columns(5)
-_metrics = [
-    (_total, "Total Districts", f"Across {len(selected_states)} states", "#60a5fa"),
-    (_severe, "Severe Deficit", "Below -30% from LPA", "#ef4444"),
-    (_moderate, "Moderate Deficit", "-15% to -30% from LPA", "#f59e0b"),
-    (_normal, "Normal / Excess", "Above -15% from LPA", "#10b981"),
-    (f"{_avg_deficit:+.1f}%", "Avg Deficit", "Weighted cotton-belt average", "#8b5cf6"),
-]
+if _dry_season > 0:
+    _metrics = [
+        (_total, "Total Districts", f"Across {len(selected_states)} states", "#60a5fa"),
+        (_severe, "Severe Deficit", "Below -30% from LPA", "#ef4444"),
+        (_moderate, "Moderate Deficit", "-15% to -30% from LPA", "#f59e0b"),
+        (_dry_season, "Dry Season", "Normal < 30 mm (not meaningful)", "#60a5fa"),
+        (f"{_avg_deficit:+.1f}%", "Avg Deficit", "Excl. dry-season districts", "#8b5cf6"),
+    ]
+else:
+    _metrics = [
+        (_total, "Total Districts", f"Across {len(selected_states)} states", "#60a5fa"),
+        (_severe, "Severe Deficit", "Below -30% from LPA", "#ef4444"),
+        (_moderate, "Moderate Deficit", "-15% to -30% from LPA", "#f59e0b"),
+        (_normal, "Normal / Excess", "Above -15% from LPA", "#10b981"),
+        (f"{_avg_deficit:+.1f}%", "Avg Deficit", "Weighted cotton-belt average", "#8b5cf6"),
+    ]
 
 for col, (value, label, detail, color) in zip(_m_cols, _metrics):
     with col:
@@ -588,7 +648,10 @@ st.markdown("""
 <hr class="heading-rule rule-red">
 """, unsafe_allow_html=True)
 
-_stressed = _filtered[_filtered["deficit_pct"] < -15].sort_values("deficit_pct")
+_stressed = _filtered[
+    (_filtered["deficit_pct"] < -15) &
+    (_filtered["severity"] != "Dry Season — Normal")
+].sort_values("deficit_pct")
 
 if not _stressed.empty:
     _table_rows = []
