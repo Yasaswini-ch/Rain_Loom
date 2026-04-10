@@ -49,7 +49,7 @@ def build_feature_matrix(
     features = pd.DataFrame(index=idx)
 
     # ── Stock features ──
-    features["vol_20d"] = sdf["vol_20d"].fillna(method="ffill")
+    features["vol_20d"] = sdf["vol_20d"].ffill()
     features["log_ret"] = sdf["log_ret"].fillna(0)
     features["vol_lag1"] = features["vol_20d"].shift(1)
     features["vol_lag2"] = features["vol_20d"].shift(2)

@@ -924,7 +924,7 @@ def compute_cotton_regimes(cotton_df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
 
     df = cotton_df.copy()
-    vol = df["rv20"].fillna(method="bfill").fillna(0.15)
+    vol = df["rv20"].bfill().fillna(0.15)
 
     # Rolling regime probability based on vol vs historical median
     vol_median = vol.expanding(min_periods=12).median()

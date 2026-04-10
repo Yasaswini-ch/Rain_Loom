@@ -79,82 +79,58 @@ def _render_chat_panel(using_slm: bool = False):
 
     # Engine badge
     _engine_badge = (
-        '<span style="background:#10b981;color:#fff;padding:2px 8px;border-radius:8px;'
-        'font-size:0.7rem;margin-left:8px;">SLM</span>'
-        if using_slm else
-        '<span style="background:#6366f1;color:#fff;padding:2px 8px;border-radius:8px;'
-        'font-size:0.7rem;margin-left:8px;">Template</span>'
+        '🟢 **SLM**' if using_slm else '🟣 **Template**'
     )
 
-    st.markdown(
-        f'<div style="background:rgba(15,23,42,0.85); border:1px solid rgba(99,102,241,0.2);'
-        f'border-radius:14px; padding:1rem 1.4rem; margin-bottom:1rem;'
-        f'box-shadow:0 4px 24px rgba(0,0,0,0.3);">'
-        f'<div style="font-size:1.05rem; font-weight:700; color:#e2e8f0; '
-        f'margin-bottom:0.6rem;">RainLoom Advisory{_engine_badge}</div>',
-        unsafe_allow_html=True,
-    )
+    with st.container(border=True):
+        st.markdown(f"### RainLoom Advisory  |  {_engine_badge}")
 
-    # Display chat history
-    for msg in st.session_state.chat_history[-10:]:
-        if msg["role"] == "user":
-            st.markdown(
-                f'<div style="background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.2); '
-                f'border-radius:12px; padding:0.6rem 0.9rem; margin:0.3rem 0; '
-                f'margin-left:20%; font-size:0.92rem; color:#e2e8f0;">'
-                f'<strong>You:</strong> {msg["content"]}</div>',
-                unsafe_allow_html=True,
-            )
-        else:
-            st.markdown(
-                f'<div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); '
-                f'border-radius:12px; padding:0.6rem 0.9rem; margin:0.3rem 0; '
-                f'margin-right:10%; font-size:0.92rem; color:#e2e8f0;">'
-                f'{msg["content"]}</div>',
-                unsafe_allow_html=True,
-            )
+        # Display chat history
+        for msg in st.session_state.chat_history[-10:]:
+            if msg["role"] == "user":
+                with st.chat_message("user"):
+                    st.write(msg["content"])
+            else:
+                with st.chat_message("assistant"):
+                    st.write(msg["content"])
 
-    # Welcome message if no history
-    if not st.session_state.chat_history:
-        _mode = "Groq Llama 3.1" if using_slm else "template engine"
-        st.markdown(
-            f'<div style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15); '
-            f'border-radius:12px; padding:0.8rem 1rem; margin:0.3rem 0; font-size:0.92rem; color:#e2e8f0;">'
-            f'<strong>RainLoom AI</strong> (powered by {_mode}):<br>'
-            f'Hello! I can help you interpret the dashboard data. Try asking:<br>'
-            f'- "What\'s the risk for Trident?"<br>'
-            f'- "Should farmers be worried?"<br>'
-            f'- "How should I position my portfolio?"<br>'
-            f'- "Tell me about the monsoon deficit"'
-            f'</div>',
-            unsafe_allow_html=True,
+        # Welcome message if no history
+        if not st.session_state.chat_history:
+            _mode = "Groq Llama 3.1" if using_slm else "template engine"
+            with st.chat_message("assistant"):
+                st.write(
+                    f"**RainLoom AI** (powered by {_mode}): "
+                    f"Hello! I can help you interpret the dashboard data. Try asking:"
+                )
+                st.markdown("""
+                - What's the risk for Trident?
+                - Should farmers be worried?
+                - How should I position my portfolio?
+                """)
+
+        st.caption("Quick Queries:")
+        # Quick action buttons
+        quick_cols = st.columns(4)
+        quick_prompts = [
+            ("Farmer", "What should farmers do right now?"),
+            ("MSME", "What should MSMEs do about cotton procurement?"),
+            ("Investor", "How should I position my textile portfolio?"),
+            ("Monsoon", "What's the current monsoon status?"),
+        ]
+        for col, (label, prompt) in zip(quick_cols, quick_prompts):
+            with col:
+                if st.button(label, key=f"quick_{label}", use_container_width=True):
+                    _handle_query(prompt)
+                    st.rerun()
+
+        # Text input — chat_input inside a container goes to the bottom of the *container*
+        user_input = st.chat_input(
+            "Ask about risk, monsoon, cotton...",
+            key="chat_input",
         )
-
-    # Quick action buttons
-    quick_cols = st.columns(4)
-    quick_prompts = [
-        ("Farmer", "What should farmers do right now?"),
-        ("MSME", "What should MSMEs do about cotton procurement?"),
-        ("Investor", "How should I position my textile portfolio?"),
-        ("Monsoon", "What's the current monsoon status?"),
-    ]
-    for col, (label, prompt) in zip(quick_cols, quick_prompts):
-        with col:
-            if st.button(label, key=f"quick_{label}", use_container_width=True):
-                _handle_query(prompt)
-                st.rerun()
-
-    # Text input
-    user_input = st.chat_input(
-        "Ask about risk, monsoon, cotton, advisories...",
-        key="chat_input",
-    )
-    if user_input:
-        _handle_query(user_input)
-        st.rerun()
-
-    # Close the wrapper div
-    st.markdown('</div>', unsafe_allow_html=True)
+        if user_input:
+            _handle_query(user_input)
+            st.rerun()
 
 
 def _handle_query(query: str):
