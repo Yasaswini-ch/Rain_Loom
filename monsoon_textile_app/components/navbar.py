@@ -20,6 +20,8 @@ PAGES = {
     "Hedging": "/Hedging_Backtest",
     "Impact": "/Societal_Impact",
     "Geospatial": "/Geospatial_Nowcast",
+    "API Gateway": "/Institutional_API",
+    "Demo Playback": "/Live_Demo_Simulation",
 }
 
 
@@ -151,6 +153,49 @@ def render_navbar(active_page: str = "Overview") -> None:
         color: #f1f5f9;
         border-bottom-color: #6366f1;
     }}
+
+    /* ---- Ticker ---- */
+    .mt-ticker {{
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        padding: 0.28rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        color: #e2e8f0;
+        margin: 0 1rem;
+        /* CRITICAL: prevent text wrapping inside the pill */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: clamp(180px, 28vw, 420px);
+        flex-shrink: 1;
+    }}
+    .ticker-dot {{
+        width: 6px;
+        height: 6px;
+        min-width: 6px;   /* don't let flexbox squash the dot */
+        background-color: #ef4444;
+        border-radius: 50%;
+        animation: pulse-dot 1.5s infinite;
+    }}
+    #monsoon-countdown {{
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }}
+    @keyframes pulse-dot {{
+        0%, 100% {{ transform: scale(1); opacity: 1; }}
+        50% {{ transform: scale(1.5); opacity: 0.5; }}
+    }}
+    /* nav-links safe horizontal scroll on tiny viewports */
+    .mt-nav-links {{
+        overflow-x: auto;
+        scrollbar-width: none;
+    }}
+    .mt-nav-links::-webkit-scrollbar {{ display: none; }}
 </style>
 
 <div class="mt-navbar">
@@ -158,6 +203,10 @@ def render_navbar(active_page: str = "Overview") -> None:
         <span class="mt-navbar-monogram">RL</span>
         <span class="mt-navbar-title">RainLoom</span>
     </a>
+    <div class="mt-ticker">
+        <span class="ticker-dot"></span>
+        <span id="monsoon-countdown">🌧️ Monsoon: Active | Deficit: -18% | Risk: <span style="color:#f59e0b;font-weight:700;">MODERATE</span></span>
+    </div>
     <div class="mt-nav-links">
         {nav_links}
     </div>

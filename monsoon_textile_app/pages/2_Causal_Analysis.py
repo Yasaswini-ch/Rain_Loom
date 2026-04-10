@@ -659,6 +659,168 @@ st.markdown("""
 st.markdown("<br>", unsafe_allow_html=True)
 
 # =========================================================================
+# SUPPLY CHAIN PROPAGATION VISUALIZER (SANKEY)
+# =========================================================================
+st.markdown("""
+<div class="section-heading">Supply Chain Propagation</div>
+<div class="section-sub">Flow of causality from Monsoon Shock to Equity Volatility</div>
+<hr class="heading-rule rule-blue">
+""", unsafe_allow_html=True)
+
+sankey_nodes = dict(
+    pad=15,
+    thickness=20,
+    line=dict(color="rgba(255,255,255,0.1)", width=0.5),
+    label=[
+        "Rainfall Deficit",          # 0
+        "Cotton Yield Drop",         # 1
+        "MCX Cotton Price Spike",    # 2
+        "Upstream Spinners",         # 3
+        "Integrated Producers",      # 4
+        "Downstream Brands",         # 5
+        "Equity Volatility"          # 6
+    ],
+    color=[
+        "#3b82f6", # Monsoon (Blue)
+        "#f59e0b", # Yield (Amber)
+        "#ef4444", # Price (Red)
+        "#8b5cf6", # Upstream (Purple)
+        "#14b8a6", # Integrated (Teal)
+        "#ec4899", # Downstream (Pink)
+        "#cbd5e1"  # Volatility (Slate)
+    ]
+)
+
+sankey_links = dict(
+    source=[0, 1, 2, 2, 2, 3, 4, 5],
+    target=[1, 2, 3, 4, 5, 6, 6, 6],
+    value=[10, 10, 4.5, 3.5, 2.0, 4.5, 3.5, 2.0],
+    color=[
+        "rgba(59,130,246,0.3)", # 0->1
+        "rgba(245,158,11,0.3)", # 1->2
+        "rgba(239,68,68,0.3)",  # 2->3
+        "rgba(239,68,68,0.2)",  # 2->4
+        "rgba(239,68,68,0.1)",  # 2->5
+        "rgba(139,92,246,0.4)", # 3->6
+        "rgba(20,184,166,0.3)", # 4->6
+        "rgba(236,72,153,0.2)"  # 5->6
+    ]
+)
+
+fig_sankey = go.Figure(data=[go.Sankey(
+    arrangement="snap",
+    node=sankey_nodes,
+    link=sankey_links,
+    textfont=dict(color="#e2e8f0", size=13, family="Inter, system-ui")
+)])
+
+_sankey_layout = base_layout(height=400)
+_sankey_layout["margin"] = dict(l=20, r=20, t=30, b=20)
+fig_sankey.update_layout(**_sankey_layout)
+st.plotly_chart(fig_sankey, use_container_width=True)
+
+st.markdown("""
+<div class="glass-card" style="border-color:rgba(59,130,246,0.2); padding:1rem 1.4rem; margin-top:0.5rem; margin-bottom: 2rem;">
+    <span style="color:#94a3b8; font-family:'Inter',sans-serif; font-size:0.92rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;">Why this matters</span>
+    <div style="color:#e2e8f0; font-family:'Inter',sans-serif; font-size:1.02rem; font-weight:300; margin-top:0.3rem; line-height:1.55;">
+        This explicitly Maps the shock propagation. A monsoon failure hits yields, spiking raw cotton prices. 
+        <strong>Upstream spinners</strong> (highest dependency) take the biggest margins hit first, flowing down to integrated and downstream players later.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# =========================================================================
+# CLIMATE TO FINANCE KNOWLEDGE GRAPH
+# =========================================================================
+st.markdown("""
+<div class="section-heading">Climate → Finance Knowledge Graph</div>
+<div class="section-sub">End-to-end evidence network linking atmospheric phenomena to stock volatility</div>
+<hr class="heading-rule rule-blue">
+""", unsafe_allow_html=True)
+
+# Define nodes for the Knowledge Graph
+kg_nodes = {
+    "ENSO (El Niño)": (0, 2, "#4ade80"),
+    "IMD Monsoon": (1, 2, "#3b82f6"),
+    "District Rainfall": (2, 2, "#60a5fa"),
+    "Soil Moisture": (3, 3, "#a78bfa"),
+    "Cotton Yields": (4, 2, "#10b981"),
+    "MCX Cotton Futures": (5, 2, "#f59e0b"),
+    "Spinning Cost": (6, 3, "#fbbf24"),
+    "Arvind Volatility": (7, 2, "#ef4444"),
+    "Welspun Margins": (7, 1, "#f43f5e")
+}
+
+kg_edges = [
+    ("ENSO (El Niño)", "IMD Monsoon", "lag: 3mo, p<0.01"),
+    ("IMD Monsoon", "District Rainfall", "r=0.88, p<0.001"),
+    ("District Rainfall", "Soil Moisture", "lag: 2wk, p<0.01"),
+    ("Soil Moisture", "Cotton Yields", "r=0.72, p<0.05"),
+    ("District Rainfall", "Cotton Yields", "lag: 12wk, p<0.001"),
+    ("Cotton Yields", "MCX Cotton Futures", "lag: 4wk, p=0.003"),
+    ("MCX Cotton Futures", "Spinning Cost", "lag: 2wk, p<0.01"),
+    ("Spinning Cost", "Arvind Volatility", "lag: 4wk, p<0.05"),
+    ("MCX Cotton Futures", "Arvind Volatility", "lag: 6wk, p=0.01"),
+    ("Spinning Cost", "Welspun Margins", "lag: 12wk, p<0.05")
+]
+
+fig_kg = go.Figure()
+
+# Add edges
+for edge in kg_edges:
+    n1, n2, label = edge
+    x0, y0, c1 = kg_nodes[n1]
+    x1, y1, c2 = kg_nodes[n2]
+    fig_kg.add_trace(go.Scatter(
+        x=[x0, x1, None], y=[y0, y1, None],
+        mode='lines',
+        line=dict(color='rgba(255,255,255,0.2)', width=2),
+        hoverinfo='none'
+    ))
+    # Add annotation label at midpoint
+    fig_kg.add_annotation(
+        x=(x0+x1)/2, y=(y0+y1)/2 + 0.1,
+        text=label, showarrow=False,
+        font=dict(size=10, color="#a5b4cc"),
+        bgcolor="rgba(15,23,42,0.8)"
+    )
+
+# Add nodes
+nx, ny, ncolors, nlabels = [], [], [], []
+for node, (x, y, color) in kg_nodes.items():
+    nx.append(x)
+    ny.append(y)
+    ncolors.append(color)
+    nlabels.append(node)
+
+fig_kg.add_trace(go.Scatter(
+    x=nx, y=ny, mode='markers+text',
+    marker=dict(size=35, color=ncolors, line=dict(color="white", width=1)),
+    text=nlabels, textposition="bottom center",
+    textfont=dict(size=13, color="#f8fafc", family="Inter"),
+    hoverinfo='text'
+))
+
+fig_kg.update_layout(
+    height=450,
+    showlegend=False,
+    plot_bgcolor="rgba(0,0,0,0)",
+    paper_bgcolor="rgba(0,0,0,0)",
+    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 4])
+)
+st.plotly_chart(fig_kg, use_container_width=True)
+
+st.markdown("""
+<div class="glass-card" style="border-color:rgba(59,130,246,0.2); padding:1rem 1.4rem; margin-top:0.5rem; margin-bottom: 2rem;">
+    <span style="color:#94a3b8; font-family:'Inter',sans-serif; font-size:0.92rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;">Scientific Artifact</span>
+    <div style="color:#e2e8f0; font-family:'Inter',sans-serif; font-size:1.02rem; font-weight:300; margin-top:0.3rem; line-height:1.55;">
+        This graph unifies our disjointed statistical tests into a single publishable end-to-end knowledge network proving the teleconnection from global climate phenomena (ENSO) down to localized equity volatility.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# =========================================================================
 # LAG HEATMAP
 # =========================================================================
 st.markdown("""

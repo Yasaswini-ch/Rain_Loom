@@ -507,7 +507,7 @@ with filter_cols[1]:
 with filter_cols[2]:
     map_style = st.selectbox(
         "Map Style",
-        options=["open-street-map", "carto-darkmatter", "carto-positron"],
+        options=["open-street-map", "carto-darkmatter", "carto-positron", "NASA Satellite (MODIS)", "NASA NDVI (Vegetation)"],
         index=1,
         key="geo_map_style",
     )
@@ -574,9 +574,26 @@ if not _filtered.empty:
         name="Districts",
     ))
 
+    mapbox_layers = []
+    _style = map_style
+    
+    if map_style.startswith("NASA"):
+        _style = "carto-darkmatter" # base layer
+        if map_style == "NASA Satellite (MODIS)":
+            mapbox_layers = [{
+                "below": 'traces', "sourcetype": "raster", "sourceattribution": "NASA GIBS",
+                "source": ["https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/2023-09-01/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg"]
+            }]
+        else:
+            mapbox_layers = [{
+                "below": 'traces', "sourcetype": "raster", "sourceattribution": "NASA GIBS",
+                "source": ["https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_NDVI_8Day/default/2023-09-01/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png"]
+            }]
+
     fig_map.update_layout(
         mapbox=dict(
-            style=map_style,
+            style=_style,
+            layers=mapbox_layers,
             center=dict(lat=22.0, lon=78.0),
             zoom=4.2,
         ),

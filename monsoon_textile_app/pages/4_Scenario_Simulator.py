@@ -938,6 +938,70 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 st.markdown(body_text)
 
+# ═══════════════════════════════════════════════════════════════════════════
+# PORTFOLIO STRESS TEST
+# ═══════════════════════════════════════════════════════════════════════════
+st.markdown('<div class="section-heading">💼 Portfolio Stress Test</div>', unsafe_allow_html=True)
+st.caption("Personalized impact assessment. Enter your current stock holdings to see your Value at Risk (VaR) under this scenario.")
+
+# Mock prices for the dashboard (if not using live data)
+mock_prices = {
+    "Arvind Ltd": 250.0,
+    "Trident Ltd": 45.0,
+    "KPR Mill": 750.0,
+    "Welspun Living": 150.0,
+    "RSWM Ltd": 180.0,
+    "Vardhman Textiles": 380.0,
+    "Page Industries": 35000.0,
+    "Raymond Ltd": 1800.0,
+}
+
+# Create columns for inputs
+port_cols = st.columns(4)
+user_portfolio = {}
+
+for idx, stock_name in enumerate(STOCKS.keys()):
+    col_idx = idx % 4
+    with port_cols[col_idx]:
+        shares = st.number_input(f"{stock_name} Shares", min_value=0, value=0, step=10, key=f"port_{idx}")
+        user_portfolio[stock_name] = shares
+
+total_value = sum(user_portfolio[name] * mock_prices[name] for name in STOCKS.keys())
+
+if total_value > 0:
+    # Calculate VaR based on risk score
+    # Assuming VaR is roughly: risk_score * 0.40 * holding_value (max 40% loss under extreme risk)
+    total_var = 0.0
+    for name in STOCKS.keys():
+        shares = user_portfolio[name]
+        if shares > 0:
+            holding_val = shares * mock_prices[name]
+            r = results[name]["risk"]
+            var_amt = holding_val * (r * 0.40) # max 40% drawdown
+            total_var += var_amt
+    
+    st.markdown(f"""
+    <div class="glass-card" style="margin-top:1rem; border-top: 3px solid {ACCENT_RED};">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <div style="font-size:0.9rem; color:{TEXT_MUTED};">Total Portfolio Value</div>
+                <div style="font-size:1.5rem; font-weight:700; color:{TEXT_PRIMARY};">₹ {total_value:,.2f}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.9rem; color:{TEXT_MUTED};">Estimated Value at Risk (VaR)</div>
+                <div style="font-size:1.8rem; font-weight:700; color:{ACCENT_RED};">₹ {total_var:,.2f}</div>
+            </div>
+        </div>
+        <div style="margin-top:1rem; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden;">
+            <div style="height:100%; width:{(total_var/total_value)*100}%; background:{ACCENT_RED};"></div>
+        </div>
+        <div style="font-size:0.85rem; color:{TEXT_MUTED}; margin-top:0.5rem;">
+            Estimated maximum loss over 4 weeks under current scenario constraints. 
+            Consider hedging <b>₹ {total_var * 0.8:,.2f}</b> using MCX cotton futures or NIFTY options.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 # ---------------------------------------------------------------------------
 # Bottom spacer
 # ---------------------------------------------------------------------------
