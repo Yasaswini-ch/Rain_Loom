@@ -123,14 +123,19 @@ def _render_chat_panel(using_slm: bool = False):
                     _handle_query(prompt)
                     st.rerun()
 
-        # Text input — chat_input inside a container goes to the bottom of the *container*
-        user_input = st.chat_input(
+        # Helper to handle submission and clear input
+        def _on_chat_submit():
+            val = st.session_state.chat_text_input
+            if val:
+                _handle_query(val)
+                st.session_state.chat_text_input = "" # Clear the box
+
+        # Text input — using st.text_input for better placement in conditional containers
+        st.text_input(
             "Ask about risk, monsoon, cotton...",
-            key="chat_input",
+            key="chat_text_input",
+            on_change=_on_chat_submit
         )
-        if user_input:
-            _handle_query(user_input)
-            st.rerun()
 
 
 def _handle_query(query: str):

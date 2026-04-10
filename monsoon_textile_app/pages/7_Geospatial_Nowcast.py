@@ -354,7 +354,7 @@ def _fetch_district_rainfall_live() -> pd.DataFrame:
         # Classify severity -- when the 30-day normal is very low (< 30 mm),
         # percentage deficits are misleading (e.g. -100% in dry season).
         # Mark those districts as "Dry Season" instead.
-        DRY_SEASON_NORMAL_THRESHOLD = 30  # mm
+        DRY_SEASON_NORMAL_THRESHOLD = 5  # mm
         if expected_mm < DRY_SEASON_NORMAL_THRESHOLD:
             severity, color_val = "Dry Season — Normal", 0
             deficit_pct = 0.0  # not meaningful
@@ -401,7 +401,7 @@ def _generate_district_data(rainfall_data: dict) -> pd.DataFrame:
     from datetime import datetime as _dt_fb
     _fb_month = _dt_fb.now().month
     _fb_frac = _MONTHLY_RAIN_FRAC.get(_fb_month, 0.03)
-    DRY_SEASON_NORMAL_THRESHOLD = 30  # mm
+    DRY_SEASON_NORMAL_THRESHOLD = 5  # mm
 
     rows = []
     annual_deficit = rainfall_data.get("annual_deficit", pd.DataFrame()) if isinstance(rainfall_data, dict) else pd.DataFrame()
@@ -747,9 +747,9 @@ fig_bar.add_trace(go.Bar(
         ],
         line=dict(width=0),
     ),
-    text=[f"{v:+.1f}%" for v in _state_avg.values],
-    textposition="outside",
-    textfont=dict(size=12, color="#e2e8f0"),
+    text=[f"{v:+.1f}%" if abs(v) > 0 else "0.0%" for v in _state_avg.values],
+    textposition="auto",
+    textfont=dict(size=11, color="#e2e8f0"),
     hovertemplate="<b>%{y}</b><br>Avg Deficit: %{x:+.1f}%<extra></extra>",
 ))
 

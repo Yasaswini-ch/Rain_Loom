@@ -170,7 +170,7 @@ def fetch_stock_data(start: str = "2015-01-01") -> dict[str, pd.DataFrame]:
     missing = [t for t in tickers if t not in stock_data]
     for i, ticker in enumerate(missing):
         if i > 0:
-            time.sleep(1.2)          # 1.2s between calls avoids rate limits
+            time.sleep(1.5)          # 1.5s between calls avoids rate limits
         try:
             df = yf.download(ticker, start=start, auto_adjust=True, progress=False)
             result = _process_single(df, ticker)
@@ -1337,14 +1337,18 @@ def load_all_data(
             },
         }
 
-    # Cache the result
-    try:
-        import pickle
-        with open(cache_file, "wb") as f:
-            pickle.dump(result, f)
-        print(f"\n[CACHE] Data cached to {cache_file}")
-    except Exception as e:
-        print(f"\n[CACHE] Failed to cache: {e}")
+    # Cache the result -- ONLY if it contains valid stock data
+    # (Prevents overwriting a good cache with an empty one due to API rate limits)
+    if stock_data and not cotton_df.empty:
+        try:
+            import pickle
+            with open(cache_file, "wb") as f:
+                pickle.dump(result, f)
+            print(f"\n[CACHE] Data cached to {cache_file}")
+        except Exception as e:
+            print(f"\n[CACHE] Failed to cache: {e}")
+    else:
+        print("\n[CACHE] Skipping disk-cache update (data appears incomplete or rate-limited)")
 
     # Also cache to session_state for cross-page sharing
     try:
