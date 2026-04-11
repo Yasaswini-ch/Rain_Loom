@@ -39,9 +39,6 @@ monsoon_textile_app/data/output/
 .ipynb_checkpoints/
 notebooks/.ipynb_checkpoints/
 
-# Claude Code internal
-.claude/
-
 # Streamlit cache
 .streamlit/secrets.toml
 
