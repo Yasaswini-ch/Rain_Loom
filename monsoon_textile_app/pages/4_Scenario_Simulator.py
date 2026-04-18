@@ -25,6 +25,18 @@ st.set_page_config(page_title="Scenario Simulator", layout="wide", initial_sideb
 render_navbar(active_page="Simulator")
 render_chat_bubble()
 
+# Initialize session state for scenario parameters if not present
+_SCENARIO_DEFAULTS = {
+    "sc_deficit": -15,
+    "sc_cotton": 10,
+    "sc_vix": 16.0,
+    "sc_breadth": 40
+}
+for k, v in _SCENARIO_DEFAULTS.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+
 # ---------------------------------------------------------------------------
 # Theme constants
 # ---------------------------------------------------------------------------
@@ -568,7 +580,7 @@ for col, sdef in zip(slider_cols, SLIDER_DEFS):
             sdef["label"],
             min_value=sdef["min"],
             max_value=sdef["max"],
-            value=current,
+            # Removed 'value=current' to avoid session state conflict
             step=sdef["step"],
             key=sdef["key"],
             label_visibility="collapsed",
@@ -801,6 +813,7 @@ fig_bar.update_layout(
 
 st.plotly_chart(fig_bar, use_container_width=True, key="risk_bar")
 
+st.info("💡 **Graph Explanation:** This bar chart shows the predicted probability of each stock entering a high-volatility regime under the simulated conditions. The error bars represent the model's 95% confidence interval. This helps identify which specific companies in the supply chain are most vulnerable to the scenario you built.")
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SENSITIVITY ANALYSIS
@@ -873,6 +886,8 @@ fig_sens.update_layout(
 )
 
 st.plotly_chart(fig_sens, use_container_width=True, key="sensitivity")
+
+st.info("💡 **Graph Explanation:** This Sensitivity Analysis line chart illustrates how each stock's risk score changes purely based on worsening monsoon deficits, assuming all other factors are held constant. A steeper line indicates that a given stock is highly vulnerable strictly to drought conditions.")
 
 st.caption(
     "This tool lets policymakers and risk managers stress-test their portfolios before monsoon "
@@ -1001,6 +1016,25 @@ if total_value > 0:
         </div>
     </div>
     """, unsafe_allow_html=True)
+    
+    with st.expander("🤔 What do these numbers mean? (Plain English)"):
+        st.markdown(f"""
+        <div style="font-family:{FONT_STACK}; font-size:0.95rem; color:{TEXT_MUTED}; line-height:1.6;">
+            <p><b style="color:{TEXT_PRIMARY};">1. What is Value at Risk (VaR)?</b><br>
+            Think of VaR as a <i>"Worst Case Scenario"</i> price tag. If the monsoon fails as you've simulated, 
+            history suggests textile stocks could drop. The ₹{total_var:,.0f} figure is the amount of money 
+            your portfolio could lose if market conditions turn sour.</p>
+            
+            <p><b style="color:{TEXT_PRIMARY};">2. Why the Hedging recommendation?</b><br>
+            "Hedging" is like buying an insurance policy for your stocks. Since our AI predicts that 
+            cotton prices might spike (increasing costs for companies like Arvind or Raymond), 
+            we suggest protecting about 80% of your current risk. By using "Cotton Futures" or "Options," 
+            you can make a profit if prices rise, which cancels out the loss in your stock value.</p>
+            
+            <p><b style="color:{ACCENT_BLUE};">Basically:</b> The VaR tells you the potential 'hole' in your pocket, 
+            and the hedging amount tells you how big an 'umbrella' you need to carry to stay dry.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
 # Bottom spacer

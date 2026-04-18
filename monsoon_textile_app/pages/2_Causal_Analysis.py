@@ -647,6 +647,8 @@ with col_irf2:
     )
     st.plotly_chart(fig2, use_container_width=True)
 
+st.info("💡 **Graph Explanation:** These Impulse Response Function (IRF) graphs show how a sudden 'shock' (e.g. a severe rainfall deficit) reverberates over time. The left graph shows the impact on Cotton Futures peaking rapidly, while the right graph shows the delayed but sustained impact on the selected stock's volatility. The shaded bands represent the 95% confidence intervals.")
+
 st.markdown("""
 <div class="glass-card" style="border-color:rgba(239,68,68,0.2); padding:1rem 1.4rem; margin-top:0.5rem;">
     <span style="color:#94a3b8; font-family:'Inter',sans-serif; font-size:0.92rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;">Why this matters</span>
@@ -718,6 +720,8 @@ _sankey_layout = base_layout(height=400)
 _sankey_layout["margin"] = dict(l=20, r=20, t=30, b=20)
 fig_sankey.update_layout(**_sankey_layout)
 st.plotly_chart(fig_sankey, use_container_width=True)
+
+st.info("💡 **Graph Explanation:** This Sankey diagram illustrates the flow and magnitude of the impact. The wider the band, the stronger the causal link. You can trace how an initial monsoon shock impacts cotton yields, disrupts raw prices, and unequally affects different segments of the textile supply chain (with upstream spinners impacted the most).")
 
 st.markdown("""
 <div class="glass-card" style="border-color:rgba(59,130,246,0.2); padding:1rem 1.4rem; margin-top:0.5rem; margin-bottom: 2rem;">
@@ -810,6 +814,8 @@ fig_kg.update_layout(
     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[0, 4])
 )
 st.plotly_chart(fig_kg, use_container_width=True)
+
+st.info("💡 **Graph Explanation:** This Knowledge Graph maps the entire evidence network. Nodes represent variables (like ENSO, rainfall, or Cotton Yields), and connected lines show statistically significant relationships along with their calculated lag times. This visualizes the whole 'teleconnection' chain from global climate systems to local stock volatility.")
 
 st.markdown("""
 <div class="glass-card" style="border-color:rgba(59,130,246,0.2); padding:1rem 1.4rem; margin-top:0.5rem; margin-bottom: 2rem;">
@@ -914,6 +920,8 @@ fig_heat.update_yaxes(
     autorange="reversed",
 )
 st.plotly_chart(fig_heat, use_container_width=True)
+
+st.info("💡 **Graph Explanation:** This heatmap identifies exactly *how many weeks* it takes for a market signal to materialize. Dark blue/teal blocks represent fast reactions (e.g., 2-4 weeks), while orange/red blocks represent slower impacts (e.g., 8-10 weeks). You can read this to see exactly when to hedge.")
 
 st.markdown("""
 <div class="glass-card" style="border-color:rgba(245,158,11,0.2); padding:1rem 1.4rem; margin-top:0.5rem;">
@@ -1294,6 +1302,8 @@ if _iv_results:
                 yaxis_range=[-3, 3],
             )
             st.plotly_chart(fig_oni, use_container_width=True)
+
+    st.info("💡 **Graph Explanation:** The left scatter plot shows how the ONI (Oceanic Niño Index) correlates with rainfall anomalies during the core monsoon months (JJAS). The right line graph tracks the ONI over time, highlighting 'El Niño' (red band, associated with lower rainfall) and 'La Niña' (blue band) periods.")
 
     # Why this matters
     st.markdown("""

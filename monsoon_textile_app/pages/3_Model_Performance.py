@@ -373,8 +373,9 @@ with col_roc:
                   yaxis_title="True Positive Rate",
                   legend=dict(x=0.58, y=0.08, bgcolor="rgba(0,0,0,0)",
                               font=dict(size=14)))
-    fig_roc.update_yaxes(showgrid=False)
     st.plotly_chart(fig_roc, use_container_width=True)
+
+    st.info("💡 **Graph Explanation:** This Receiver Operating Characteristic (ROC) curve evaluates the model's accuracy in distinguishing 'Stressed' vs 'Calm' market periods. The closer the curve bows to the top-left corner, the more accurate the predictions. The dotted diagonal line represents random guessing.")
 
 with col_side:
     # --- AUC companion card ---
@@ -507,9 +508,10 @@ with tab_global:
     ))
 
     _apply_layout(fig_shap, height=520,
-                  xaxis_title="Mean |SHAP Value|",
-                  yaxis=dict(autorange="reversed", showgrid=False))
+                  xaxis_title="Mean |SHAP Value|")
     st.plotly_chart(fig_shap, use_container_width=True)
+    
+    st.info("💡 **Graph Explanation:** This bar chart shows the 'SHAP value' for each input parameter. It essentially answers: 'Which factors did the AI model rely on most to make its predictions?'. Longer bars indicate higher importance. Notice how rainfall and cotton features heavily influence the model.")
 
 with tab_stock:
     chart_title("SHAP Importance Comparison Across Stocks")
@@ -556,8 +558,9 @@ with tab_stock:
 
     _apply_layout(fig_comp, height=380)
     fig_comp.update_yaxes(showgrid=False)
-    fig_comp.update_xaxes(showgrid=False)
     st.plotly_chart(fig_comp, use_container_width=True)
+    
+    st.info("💡 **Graph Explanation:** This heatmap breaks down the SHAP feature importance per individual stock. Darker blue/purple indicates that a specific variable was heavily weighted by the model when predicting that specific stock's future volatility.")
 
 # --- SHAP: Why this matters ---
 st.markdown(f"""
@@ -753,9 +756,9 @@ for ann in fig_tl.layout.annotations:
         ann.font = dict(size=14, color=TEXT_MUTED, family=FONT_FAMILY)
 
 fig_tl.update_yaxes(showgrid=False)
-fig_tl.update_xaxes(showgrid=True, gridcolor="rgba(148,163,184,0.06)")
-
 st.plotly_chart(fig_tl, use_container_width=True)
+
+st.info("💡 **Graph Explanation:** This is a step-by-step reconstruction of the 2009 Severe Drought. The top panel shows the worsening rainfall deficit. The middle panel shows the AI model's Risk Score crossing the danger threshold (dotted line). The bottom panel shows the actual stock volatility spiking weeks later. This proves the model's ability to provide actionable early warnings.")
 
 # --- Backtesting: Why this matters ---
 st.markdown(f"""
@@ -806,8 +809,9 @@ with col_cm:
 
     _apply_layout(fig_cm, height=360)
     fig_cm.update_yaxes(showgrid=False)
-    fig_cm.update_xaxes(showgrid=False)
     st.plotly_chart(fig_cm, use_container_width=True)
+    
+    st.info("💡 **Graph Explanation:** This Confusion Matrix evaluates the precision of the model by comparing its predictions against actual historical outcomes. The diagonal (top-left to bottom-right) shows correct predictions. A high number in the 'Predicted: Stressed / Actual: Calm' box would mean the model gives too many false alarms.")
 
     # Companion accuracy metrics
     st.markdown(f"""
@@ -1198,6 +1202,8 @@ if _health_data:
             hovermode="x unified",
         )
         st.plotly_chart(fig_perf, use_container_width=True)
+        
+        st.info("💡 **Graph Explanation:** This chart monitors the model's accuracy, F1 score, and AUC over time. If the model starts losing its predictive edge ('concept drift'), vertical dashed lines will flag exactly when the performance drop happened.")
 
     with _perf_cols[1]:
         st.markdown(f"""
@@ -1245,8 +1251,9 @@ if _health_data:
             bordercolor=_ks_col,
             borderwidth=1, borderpad=6,
         )
-
         st.plotly_chart(fig_dist, use_container_width=True)
+        
+        st.info("💡 **Graph Explanation:** This histogram overlays the *historical* distribution of risk scores against the *recent* distribution. If the two shapes drift apart significantly, it signals a fundamental change in market conditions, triggering the KS test alert.")
 
     # ── Why this matters ──
     st.markdown(f"""

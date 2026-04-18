@@ -784,6 +784,8 @@ with tab1:
         )
         st.plotly_chart(fig_savings, use_container_width=True)
 
+        st.info("💡 **Graph Explanation:** This bar chart compares the cost of insurance premiums (blue) versus the claims paid out (green) during historic drought years. The yellow line shows the net financial savings for farmers who brought insurance early based on the model's early warnings.")
+
         st.caption(
             "In the 2009 severe drought, cotton farmers lost Rs 2,000+ Cr. With 8 weeks of early warning "
             "from our model, 6.2M farmers could have enrolled in PMFBY crop insurance before losses "
@@ -907,6 +909,8 @@ with tab2:
         )
         st.plotly_chart(fig_hedge, use_container_width=True)
 
+        st.info("💡 **Graph Explanation:** This graph simulates the financial benefit of early hedging. The red line is the real market (spot) price which spikes during a drought. The green line shows a stabilized price locked in early via a forward contract. The shaded gap represents the direct savings for small textile businesses.")
+
         st.caption(
             "Small textile MSMEs spend 50-70% of revenue on cotton procurement. During drought years, "
             "unhedged procurement costs spike 15-25%. Forward contracts locked in early save an average "
@@ -1002,6 +1006,8 @@ with tab3:
         title="State-Level Monsoon Risk Score -- Weekly Tracking",
     )
     st.plotly_chart(fig_policy, use_container_width=True)
+
+    st.info("💡 **Graph Explanation:** This heatmap provides a quick, state-by-state view of monsoon risk over the weeks. Reading across a row shows how risk intensifies in one state over time. Red indicates severe risk requiring immediate policy intervention (like seed relief or expedited insurance).")
 
     # -- Recommendations + Employment --
     col_p1, col_p2 = st.columns(2, gap="large")
@@ -1207,6 +1213,87 @@ with sim_col2:
         </div>
         """, unsafe_allow_html=True)
 
+    # ── Security Layer ─────────────────────────────────────────────────────────
+    with st.expander("🔐 How is this secure? — 6 Protection Layers", expanded=False):
+        st.markdown("""
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; text-align:center;">
+          <div style="background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.2); border-radius:10px; padding:10px 6px;">
+            <div style="font-size:1.3rem; font-weight:800; color:#8b5cf6;">6</div>
+            <div style="font-size:0.65rem; color:#4b6080; text-transform:uppercase; letter-spacing:.07em; margin-top:2px;">Security Layers</div>
+          </div>
+          <div style="background:rgba(59,130,246,.08); border:1px solid rgba(59,130,246,.2); border-radius:10px; padding:10px 6px;">
+            <div style="font-size:1.3rem; font-weight:800; color:#3b82f6;">2-of-2</div>
+            <div style="font-size:0.65rem; color:#4b6080; text-transform:uppercase; letter-spacing:.07em; margin-top:2px;">Source Consensus</div>
+          </div>
+          <div style="background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.2); border-radius:10px; padding:10px 6px;">
+            <div style="font-size:1.3rem; font-weight:800; color:#10b981;">Immutable</div>
+            <div style="font-size:0.65rem; color:#4b6080; text-transform:uppercase; letter-spacing:.07em; margin-top:2px;">Audit Trail</div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        sec_layers = [
+            (
+                "🌦️", "Dual-Source Trigger Consensus", "ANTI-FRAUD", "#10b981",
+                "A payout fires only if **both** independent sources agree: "
+                "IMD/Open-Meteo must confirm ≥ −20% rainfall deficit **AND** NASA NDVI must show crop stress ≤ 0.30. "
+                "One source being wrong, corrupted, or spoofed is never sufficient to release funds."
+            ),
+            (
+                "🪪", "Aadhaar eKYC + AEPS Biometric Verification", "IDENTITY", "#3b82f6",
+                "Every enrolled farmer is authenticated via **Aadhaar-linked eKYC** (GoI biometric system). "
+                "The payout is routed exclusively to the NPCI-verified bank account — no cash, no third-party accounts. "
+                "A fraudster cannot redirect funds without biometric authentication."
+            ),
+            (
+                "📍", "District Geo-Fencing", "LOCATION", "#f59e0b",
+                "Farmers are registered with their land parcel's district code. At trigger time, "
+                "the system verifies their district is among the **83 active cotton-belt districts** "
+                "showing a validated deficit. A farmer outside the affected zone cannot claim — even if otherwise eligible."
+            ),
+            (
+                "📱", "SMS OTP — Two-Factor Confirmation", "2FA", "#8b5cf6",
+                "Before the UPI transfer is dispatched, a **one-time password is sent to the farmer's registered mobile**. "
+                "Confirmation required within 90 seconds. This ensures that even a compromised Aadhaar number "
+                "cannot move money without physical phone access."
+            ),
+            (
+                "🔒", "Per-Farmer Seasonal Payout Cap + Deduplication", "ABUSE PREVENTION", "#ef4444",
+                "Each account is capped at **one payout per drought event per season**. "
+                "The deduplication key = `FarmerID + DistrictCode + SeasonYear + DroughtEventID`. "
+                "Duplicate keys are silently rejected — preventing replay attacks and accidental double-triggers."
+            ),
+            (
+                "📋", "Immutable Append-Only Audit Trail", "COMPLIANCE", "#06b6d4",
+                "Every payout event — including the **exact rainfall value, NDVI reading, risk score, "
+                "timestamp, farmer ID, district code, and UPI transaction reference** — is written to "
+                "an append-only log. This serves as the basis for regulatory reporting, dispute resolution, "
+                "and actuarial review by insurance underwriters."
+            ),
+        ]
+
+        for icon, title, badge, color, desc in sec_layers:
+            st.markdown(f"""
+            <div style="display:flex; gap:12px; padding:12px 14px; background:rgba(0,0,0,.25);
+                        border-radius:10px; border:1px solid rgba(255,255,255,0.06); margin-bottom:9px;">
+              <div style="font-size:1.3rem; flex-shrink:0; padding-top:1px;">{icon}</div>
+              <div style="flex:1;">
+                <div style="font-size:0.82rem; font-weight:700; color:#e2e8f0; margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+                  {title}
+                  <span style="font-size:0.62rem; font-weight:700; padding:2px 8px; border-radius:100px;
+                               background:rgba(255,255,255,.06); color:{color}; border:1px solid {color}40;
+                               letter-spacing:.06em;">{badge}</span>
+                </div>
+                <div style="font-size:0.82rem; color:#94a3b8; line-height:1.6;">{desc}</div>
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.caption(
+            "These layers together ensure the system is resistant to: fraudulent claims, API data spoofing, "
+            "identity theft, out-of-zone claims, replay attacks, and regulatory non-compliance."
+        )
+
 # ── Payout Timeline Chart ──────────────────────────────────────────────────────
 st.markdown("""
 <div class="section-heading" style="margin-top:2rem;">Payout Speed: Parametric vs. Traditional PMFBY</div>
@@ -1257,6 +1344,8 @@ with tl_col1:
         margin=dict(l=20, r=20, t=30, b=40),
     )
     st.plotly_chart(fig_tl, use_container_width=True, key="payout_timeline")
+
+    st.info("💡 **Graph Explanation:** This visualizes the speed of insurance payouts. The red path shows the traditional 6-step bureaucratic process that takes 190 days. The green path shows the automated parametric system that uses AI triggers to settle payouts via UPI in just 4 seconds.")
 
 with tl_col2:
     st.markdown("""
@@ -1349,6 +1438,8 @@ fig_women.update_layout(
 fig_women.update_xaxes(tickfont=dict(size=13, color="#c8d2e0"), gridcolor="rgba(0,0,0,0)")
 fig_women.update_yaxes(tickfont=dict(size=13, color="#c8d2e0"), gridcolor="rgba(0,0,0,0)", autorange="reversed")
 st.plotly_chart(fig_women, use_container_width=True, key="women_heatmap")
+
+st.info("💡 **Graph Explanation:** This impact matrix highlights the gendered effects of textile supply chain disruptions. It specifically counts the number of *women workers* (in thousands) currently at risk in each state (y-axis) based on the AI model's real-time risk predictions (x-axis). It translates volatility percentages into actual vulnerable humans.")
 
 # Impact KPIs
 w1, w2, w3, w4 = st.columns(4)

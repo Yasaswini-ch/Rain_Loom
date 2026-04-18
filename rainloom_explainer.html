@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>RainLoom — How It Works</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060c1a;--bg2:#0a1225;
+  --card:rgba(14,24,54,0.7);--card2:rgba(10,18,40,0.9);
+  --border:rgba(255,255,255,0.06);--border-a:rgba(59,130,246,0.35);
+  --blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;
+  --gold:#f59e0b;--red:#ef4444;--purple:#8b5cf6;--pink:#ec4899;
+  --t1:#e2e8f0;--t2:#94a3b8;--t3:#4b6080;
+  --mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);overflow-x:hidden}
+
+/* Orbs */
+.orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:.1;animation:orb-drift 20s ease-in-out infinite alternate}
+.orb1{width:700px;height:700px;background:var(--blue);top:-200px;left:-150px}
+.orb2{width:500px;height:500px;background:var(--purple);bottom:-100px;right:-100px;animation-delay:-8s}
+.orb3{width:400px;height:400px;background:var(--cyan);top:40%;left:50%;animation-delay:-4s}
+@keyframes orb-drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(60px,40px) scale(1.15)}}
+
+/* Layout */
+.wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 24px}
+
+/* Nav */
+nav{position:sticky;top:0;z-index:100;background:rgba(6,12,26,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:13px 0}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;max-width:1280px;margin:0 auto;padding:0 24px}
+.nav-logo{font-size:1.05rem;font-weight:800;background:linear-gradient(90deg,#60a5fa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap}
+.nav-links a{font-size:.78rem;font-weight:500;color:var(--t2);padding:5px 10px;border-radius:6px;text-decoration:none;transition:all .2s}
+.nav-links a:hover{color:var(--t1);background:rgba(255,255,255,.06)}
+
+/* Hero */
+header{padding:80px 0 56px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);color:var(--blue);font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:100px;margin-bottom:22px;animation:fade-up .8s ease both}
+h1.hero-title{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:900;line-height:1.08;letter-spacing:-.03em;background:linear-gradient(135deg,#e2e8f0 0%,#94a3b8 45%,#3b82f6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fade-up .8s .1s ease both}
+.hero-sub{margin:14px auto 0;font-size:1rem;color:var(--t2);max-width:680px;line-height:1.7;animation:fade-up .8s .2s ease both}
+.hero-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:28px;animation:fade-up .8s .3s ease both}
+.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--border);padding:6px 13px;border-radius:100px;font-size:.8rem;color:var(--t2);font-weight:500;transition:all .25s}
+.chip:hover{border-color:var(--border-a);color:var(--t1)}
+.chip-dot{width:7px;height:7px;border-radius:50%}
+
+/* Sections */
+.section{padding:64px 0 44px}
+.section-label{font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:8px}
+.section-title{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800;letter-spacing:-.02em}
+.section-sub{font-size:.95rem;color:var(--t2);margin-top:10px;max-width:620px;line-height:1.65}
+hr.divider{border:none;border-top:1px solid var(--border);margin:0 0 38px}
+
+/* ── 01 PROBLEM ── */
+.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+.prob-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;position:relative;overflow:hidden;transition:all .3s}
+.prob-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.prob-card.red::before{background:var(--red)}.prob-card.gold::before{background:var(--gold)}.prob-card.purple::before{background:var(--purple)}
+.prob-card:hover{border-color:var(--border-a);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.prob-icon{font-size:2rem;margin-bottom:12px}.prob-title{font-size:1rem;font-weight:700;margin-bottom:7px}
+.prob-desc{font-size:.87rem;color:var(--t2);line-height:1.65}
+.prob-stat{margin-top:13px;font-size:.8rem;font-weight:700;padding:4px 10px;border-radius:6px;display:inline-block}
+.st-r{background:rgba(239,68,68,.12);color:var(--red)}.st-g{background:rgba(245,158,11,.12);color:var(--gold)}.st-p{background:rgba(139,92,246,.12);color:var(--purple)}
+
+/* ── 02 PIPELINE ── */
+.pipeline-wrapper{margin-top:44px}
+.pipeline-step{display:grid;grid-template-columns:68px 36px 1fr;align-items:start;gap:0}
+.pipeline-step:last-child .pipe-line{display:none}
+.step-num-col{display:flex;flex-direction:column;align-items:center}
+.step-circle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;border:2px solid;transition:all .3s;flex-shrink:0;position:relative;z-index:2}
+.pipe-line{width:2px;flex:1;min-height:28px;margin:0 auto}
+.step-arrow{display:flex;align-items:flex-start;justify-content:center;padding-top:13px;color:var(--t3);font-size:.95rem}
+.step-body{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:14px;transition:all .35s;cursor:pointer}
+.step-body:hover,.step-body.active{border-color:var(--border-a);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.step-header{display:flex;align-items:center;justify-content:space-between}
+.step-tag{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:100px}
+.step-name{font-size:1rem;font-weight:700;margin-top:5px}
+.step-desc{font-size:.88rem;color:var(--t2);margin-top:5px;line-height:1.6}
+.step-detail{max-height:0;overflow:hidden;transition:max-height .4s ease,opacity .3s ease;opacity:0}
+.step-detail.open{max-height:700px;opacity:1}
+.detail-inner{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:11px}
+.detail-item{background:rgba(255,255,255,.03);border-radius:10px;padding:13px 15px;border:1px solid var(--border)}
+.detail-item-label{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.detail-item-val{font-size:.9rem;font-weight:600;margin-top:4px}
+.code-snip{font-family:var(--mono);font-size:.8rem;background:rgba(0,0,0,.55);border-radius:8px;padding:11px 13px;color:#7dd3fc;margin-top:11px;border:1px solid rgba(255,255,255,.06);white-space:pre;overflow-x:auto}
+.expand-hint{font-size:.75rem;color:var(--t3);display:flex;align-items:center;gap:4px}
+.chevron{transition:transform .3s;display:inline-block}.chevron.open{transform:rotate(90deg)}
+/* step colors */
+.s1 .step-circle{background:rgba(6,182,212,.1);border-color:var(--cyan);color:var(--cyan)}.s1 .pipe-line{background:linear-gradient(to bottom,var(--cyan),var(--blue))}.s1 .step-tag{background:rgba(6,182,212,.1);color:var(--cyan)}
+.s2 .step-circle{background:rgba(59,130,246,.1);border-color:var(--blue);color:var(--blue)}.s2 .pipe-line{background:linear-gradient(to bottom,var(--blue),var(--purple))}.s2 .step-tag{background:rgba(59,130,246,.1);color:var(--blue)}
+.s3 .step-circle{background:rgba(139,92,246,.1);border-color:var(--purple);color:var(--purple)}.s3 .pipe-line{background:linear-gradient(to bottom,var(--purple),var(--gold))}.s3 .step-tag{background:rgba(139,92,246,.1);color:var(--purple)}
+.s4 .step-circle{background:rgba(245,158,11,.1);border-color:var(--gold);color:var(--gold)}.s4 .pipe-line{background:linear-gradient(to bottom,var(--gold),var(--green))}.s4 .step-tag{background:rgba(245,158,11,.1);color:var(--gold)}
+.s5 .step-circle{background:rgba(16,185,129,.1);border-color:var(--green);color:var(--green)}.s5 .pipe-line{background:linear-gradient(to bottom,var(--green),var(--red))}.s5 .step-tag{background:rgba(16,185,129,.1);color:var(--green)}
+.s6 .step-circle{background:rgba(239,68,68,.1);border-color:var(--red);color:var(--red)}.s6 .pipe-line{background:linear-gradient(to bottom,var(--red),var(--pink))}.s6 .step-tag{background:rgba(239,68,68,.1);color:var(--red)}
+.s7 .step-circle{background:rgba(236,72,153,.1);border-color:var(--pink);color:var(--pink)}.s7 .step-tag{background:rgba(236,72,153,.1);color:var(--pink)}
+
+/* ── 03 ML ENGINE ── */
+.ml-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:22px}
+.ml-tab{padding:8px 16px;border-radius:9px;font-size:.8rem;font-weight:700;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--t2);cursor:pointer;transition:all .25s;white-space:nowrap}
+.ml-tab:hover{border-color:var(--border-a);color:var(--t1)}
+.ml-tab.active{border-color:var(--border-a);color:var(--t1);background:rgba(59,130,246,.1)}
+.ml-panel{display:none}.ml-panel.active{display:block}
+.data-flow-board{background:var(--card2);border:1px solid var(--border);border-radius:18px;padding:26px;position:relative;overflow:hidden;min-height:340px}
+.source-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:28px}
+.source-card{background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:12px;padding:15px 11px;text-align:center;transition:border-color .3s}
+.source-card.fetching{border-color:var(--cyan);animation:src-pulse 1.2s ease-in-out infinite}
+.source-card.done{border-color:var(--green)}
+@keyframes src-pulse{0%,100%{box-shadow:0 0 0 0 rgba(6,182,212,0)}50%{box-shadow:0 0 0 6px rgba(6,182,212,.2)}}
+.source-icon{font-size:1.5rem;margin-bottom:7px}.source-name{font-size:.73rem;font-weight:700;color:var(--t1)}
+.source-status{font-size:.66rem;margin-top:5px;font-family:var(--mono)}
+.source-bar-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:9px;overflow:hidden}
+.source-bar{height:100%;width:0%;border-radius:2px;background:var(--cyan);transition:width .05s linear}
+.source-card.done .source-bar{background:var(--green)}
+.ingestion-log{font-family:var(--mono);font-size:.76rem;color:var(--t2);line-height:1.9;background:rgba(0,0,0,.5);border-radius:9px;padding:13px 15px;max-height:150px;overflow-y:auto;border:1px solid var(--border)}
+.log-line-in{color:var(--cyan)}.log-line-ok{color:var(--green)}.log-line-warn{color:var(--gold)}.log-line-info{color:var(--t2)}
+.run-btn{padding:9px 22px;border-radius:9px;border:1px solid var(--border-a);background:rgba(59,130,246,.14);color:var(--blue);font-size:.83rem;font-weight:700;cursor:pointer;transition:all .25s;margin-bottom:18px}
+.run-btn:hover{background:rgba(59,130,246,.24);box-shadow:0 4px 18px rgba(59,130,246,.2)}
+.run-btn:disabled{opacity:.35;cursor:default}
+.feat-board{background:var(--card2);border:1px solid var(--border);border-radius:18px;padding:26px}
+.feat-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.feat-bar{height:100%;border-radius:4px;width:0%;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.model-panel{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:18px}
+.model-output-val{font-size:1.8rem;font-weight:900;font-family:var(--mono);margin:6px 0;transition:color .5s}
+.model-output-label{font-size:.72rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em}
+.garch-chart{display:flex;align-items:flex-end;gap:3px;height:78px;margin:11px 0}
+.garch-bar{flex:1;border-radius:3px 3px 0 0;min-width:5px;transition:height .4s ease,background .4s ease}
+.xgb-node{display:inline-flex;align-items:center;justify-content:center;padding:5px 9px;border-radius:8px;font-size:.7rem;font-weight:700;margin:3px;border:1px solid;transition:all .3s}
+.xgb-level{display:flex;justify-content:center;flex-wrap:wrap;gap:4px;margin-bottom:7px}
+.mlp-net{display:flex;align-items:center;justify-content:center;gap:14px;margin:11px 0}
+.mlp-layer{display:flex;flex-direction:column;gap:5px;align-items:center}
+.mlp-node{width:20px;height:20px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:.55rem;transition:all .4s}
+.mlp-conn{flex:1;height:1px;background:rgba(255,255,255,.07)}
+.mlp-layer-label{font-size:.58rem;color:var(--t3);margin-top:3px;text-align:center;white-space:pre-line}
+.ensemble-board{background:var(--card2);border:1px solid var(--border);border-radius:18px;padding:26px}
+.ensemble-flow{display:grid;grid-template-columns:1fr 40px 1fr 40px 1fr;align-items:center;gap:7px;margin-bottom:24px}
+.ens-input{background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:12px;padding:13px;text-align:center}
+.ens-input-name{font-size:.7rem;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em}
+.ens-input-val{font-size:1.45rem;font-weight:900;font-family:var(--mono);margin-top:4px}
+.ens-arrow{font-size:1.3rem;color:var(--t3);text-align:center}
+.ens-output{background:rgba(59,130,246,.08);border:1px solid var(--border-a);border-radius:13px;padding:18px;text-align:center}
+.ens-out-label{font-size:.7rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.1em}
+.ens-out-val{font-size:2.6rem;font-weight:900;font-family:var(--mono);margin:5px 0;transition:color .5s}
+.ens-out-badge{display:inline-block;padding:4px 13px;border-radius:100px;font-size:.8rem;font-weight:700;margin-top:3px}
+.ens-weight-row{display:flex;gap:9px;margin-top:14px}
+.ens-weight{flex:1;background:rgba(0,0,0,.3);border-radius:9px;padding:11px;text-align:center;border:1px solid var(--border)}
+.ens-w-name{font-size:.67rem;color:var(--t3);font-weight:700;text-transform:uppercase}
+.ens-w-val{font-size:1rem;font-weight:800;font-family:var(--mono);margin-top:3px}
+.ens-formula{font-family:var(--mono);font-size:.8rem;color:var(--blue);background:rgba(0,0,0,.4);border-radius:8px;padding:9px 13px;border:1px solid var(--border);margin-top:14px;text-align:center}
+
+/* ── 04 FINAL OUTPUT ── */
+.output-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:36px}
+.output-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;transition:all .3s;position:relative;overflow:hidden}
+.output-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.output-card:hover{border-color:var(--border-a);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.oc-blue::before{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.oc-red::before{background:linear-gradient(90deg,var(--red),var(--gold))}
+.oc-green::before{background:linear-gradient(90deg,var(--green),var(--cyan))}
+.oc-pink::before{background:linear-gradient(90deg,var(--pink),var(--purple))}
+.output-icon{font-size:1.8rem;margin-bottom:11px}
+.output-title{font-size:1.02rem;font-weight:800;margin-bottom:6px}
+.output-desc{font-size:.86rem;color:var(--t2);line-height:1.65;margin-bottom:14px}
+/* Risk gauge row */
+.gauge-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.gauge-card{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;transition:all .3s}
+.gauge-card:hover{border-color:var(--border-a)}
+.gauge-name{font-size:.68rem;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:11px}
+.gauge-ring{position:relative;width:72px;height:72px;margin:0 auto 10px}
+.gauge-ring svg{transform:rotate(-90deg)}
+.gauge-ring circle{fill:none;stroke-width:7;stroke-linecap:round}
+.gauge-ring .track{stroke:rgba(255,255,255,.07)}
+.gauge-ring .fill{transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)}
+.gauge-val{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.05rem;font-weight:800}
+.gauge-label{font-size:.74rem;font-weight:700;padding:2px 8px;border-radius:100px;display:inline-block}
+.gl-low{background:rgba(16,185,129,.15);color:var(--green)}
+.gl-mid{background:rgba(245,158,11,.15);color:var(--gold)}
+.gl-high{background:rgba(239,68,68,.15);color:var(--red)}
+.gl-ext{background:rgba(239,68,68,.25);color:#ff6b6b;animation:pulse-r 1s ease-in-out infinite}
+@keyframes pulse-r{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+/* Alert email mockup */
+.email-mock{background:rgba(0,0,0,.5);border:1px solid rgba(239,68,68,.2);border-radius:10px;overflow:hidden;margin-top:12px}
+.email-header{background:linear-gradient(90deg,rgba(239,68,68,.3),rgba(245,158,11,.2));padding:10px 14px;font-size:.75rem;font-weight:700;color:var(--t1)}
+.email-body{padding:12px 14px}
+.email-row{display:flex;justify-content:space-between;font-size:.75rem;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.email-row:last-child{border:none}
+.email-label{color:var(--t3)}.email-val{font-weight:700;font-family:var(--mono)}
+/* Payout mock */
+.payout-timeline{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.payout-step{display:flex;align-items:center;gap:12px;padding:9px 13px;background:rgba(0,0,0,.3);border-radius:9px;border:1px solid var(--border);transition:all .3s}
+.payout-step.done{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.05)}
+.payout-step.active{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.05);animation:step-pulse 1.2s ease-in-out infinite}
+@keyframes step-pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}50%{box-shadow:0 0 0 6px rgba(245,158,11,.1)}}
+.payout-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;flex-shrink:0}
+.payout-text{font-size:.8rem;color:var(--t2);flex:1}
+.payout-time{font-family:var(--mono);font-size:.72rem;font-weight:700}
+/* Alert log */
+.alert-stream{margin-top:12px;font-family:var(--mono);font-size:.75rem;color:var(--t2);background:rgba(0,0,0,.5);border-radius:9px;padding:12px 14px;max-height:140px;overflow-y:auto;border:1px solid var(--border)}
+.al-ok{color:var(--green)}.al-warn{color:var(--gold)}.al-crit{color:var(--red)}.al-tg{color:var(--blue)}
+
+/* ── Security Layer ── */
+.sec-toggle{display:flex;align-items:center;gap:8px;padding:9px 13px;background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.2);border-radius:9px;cursor:pointer;transition:all .25s;font-size:.8rem;font-weight:700;color:var(--purple);margin-top:14px;width:100%}
+.sec-toggle:hover{background:rgba(139,92,246,.13);border-color:rgba(139,92,246,.35)}
+.sec-toggle .sec-chev{margin-left:auto;font-size:.9rem;transition:transform .3s}
+.sec-toggle.open .sec-chev{transform:rotate(90deg)}
+.sec-panel{max-height:0;overflow:hidden;transition:max-height .45s ease,opacity .35s ease;opacity:0}
+.sec-panel.open{max-height:900px;opacity:1}
+.sec-panel-inner{padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.sec-layer{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(0,0,0,.35);border-radius:10px;border:1px solid var(--border);transition:border-color .2s}
+.sec-layer:hover{border-color:rgba(139,92,246,.25)}
+.sec-layer-icon{font-size:1.25rem;flex-shrink:0;margin-top:1px}
+.sec-layer-body{flex:1}
+.sec-layer-title{font-size:.8rem;font-weight:700;color:var(--t1);margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.sec-badge{font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:100px;letter-spacing:.06em}
+.sb-green{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.25)}
+.sb-blue{background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.25)}
+.sb-gold{background:rgba(245,158,11,.15);color:var(--gold);border:1px solid rgba(245,158,11,.25)}
+.sb-purple{background:rgba(139,92,246,.15);color:var(--purple);border:1px solid rgba(139,92,246,.25)}
+.sb-red{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.sec-layer-desc{font-size:.76rem;color:var(--t2);line-height:1.6}
+.sec-summary-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.18);border-radius:10px}
+.ssb-item{text-align:center}
+.ssb-val{font-size:.9rem;font-weight:800;font-family:var(--mono)}
+.ssb-label{font-size:.62rem;color:var(--t3);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.07em}
+
+/* ── 05 DASHBOARD ── */
+.pages-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:34px}
+.page-card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:22px;transition:all .3s;position:relative;overflow:hidden}
+.page-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .3s}
+.page-card:hover::after{opacity:1}
+.page-card:hover{border-color:var(--border-a);transform:translateY(-4px);box-shadow:0 18px 50px rgba(0,0,0,.5)}
+.pc-blue::after{background:var(--blue)}.pc-cyan::after{background:var(--cyan)}.pc-purple::after{background:var(--purple)}
+.pc-gold::after{background:var(--gold)}.pc-green::after{background:var(--green)}.pc-red::after{background:var(--red)}.pc-pink::after{background:var(--pink)}
+.page-icon{font-size:1.6rem;margin-bottom:10px}.page-num{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+.page-title{font-size:.97rem;font-weight:700;margin-top:3px}.page-desc{font-size:.83rem;color:var(--t2);margin-top:5px;line-height:1.6}
+.page-feature{font-size:.76rem;margin-top:11px;padding:4px 9px;border-radius:6px;border:1px solid;display:inline-block;font-weight:600}
+
+/* ── 06 IMPACT ── */
+.impact-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:34px}
+.impact-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;transition:all .3s}
+.impact-card:hover{border-color:var(--border-a);box-shadow:0 14px 45px rgba(0,0,0,.4)}
+.impact-icon{font-size:1.9rem;margin-bottom:11px}.impact-title{font-size:1rem;font-weight:700}
+.impact-desc{font-size:.86rem;color:var(--t2);margin-top:7px;line-height:1.65}
+.impact-highlight{margin-top:13px;padding:11px 13px;background:rgba(255,255,255,.03);border-radius:8px;border-left:3px solid}
+.impact-highlight p{font-size:.84rem;color:var(--t2);line-height:1.6}
+.impact-highlight strong{color:var(--t1)}
+
+/* ── 07 STACK ── */
+.tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:34px}
+.tech-group{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:20px}
+.tech-group-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);margin-bottom:13px}
+.tech-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;font-size:.78rem;font-weight:600;margin:3px;border:1px solid;transition:all .2s}
+.tech-pill:hover{filter:brightness(1.2)}
+
+/* KG */
+.kg-wrapper{margin-top:38px;background:var(--card2);border:1px solid var(--border);border-radius:18px;padding:28px}
+.kg-canvas{display:grid;grid-template-columns:repeat(5,1fr);align-items:center;gap:6px;margin-top:20px}
+.kg-node{text-align:center;padding:13px 8px;background:rgba(0,0,0,.3);border-radius:13px;border:1px solid var(--border);cursor:default;transition:all .2s}
+.kg-node:hover{border-color:var(--border-a);transform:scale(1.04)}
+.kg-node-icon{font-size:1.4rem;margin-bottom:5px}.kg-node-title{font-size:.74rem;font-weight:700}.kg-node-sub{font-size:.66rem;color:var(--t2);margin-top:2px}
+.kg-arrow{text-align:center}.kg-arrow-line{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--t3)}
+.kg-arrow-label{font-size:.62rem;font-weight:700;color:var(--blue);letter-spacing:.05em}
+.kg-arrow-stat{font-family:var(--mono);font-size:.58rem;color:var(--t3)}
+
+/* Footer */
+footer{margin-top:72px;border-top:1px solid var(--border);padding:28px 0;text-align:center;font-size:.82rem;color:var(--t3)}
+footer a{color:var(--blue);text-decoration:none}
+
+/* Animations */
+@keyframes fade-up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.shimmer-top::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),var(--cyan),var(--purple),var(--blue));background-size:200% 100%;animation:shimmer 3s linear infinite}
+
+@media(max-width:900px){
+  .problem-grid,.tech-grid{grid-template-columns:1fr}
+  .pages-grid,.output-grid{grid-template-columns:1fr 1fr}
+  .impact-grid{grid-template-columns:1fr}
+  .kg-canvas{grid-template-columns:1fr}
+  .detail-grid,.gauge-row{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .pages-grid,.output-grid{grid-template-columns:1fr}
+  .source-grid{grid-template-columns:1fr 1fr}
+  .ensemble-flow{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+
+<!-- NAV -->
+<nav><div class="nav-inner">
+  <span class="nav-logo">🌧️ RainLoom</span>
+  <div class="nav-links">
+    <a href="#problem">01 Problem</a>
+    <a href="#pipeline">02 Pipeline</a>
+    <a href="#ml-engine">03 ML Engine</a>
+    <a href="#output">04 Final Output</a>
+    <a href="#dashboard">05 Dashboard</a>
+    <a href="#impact">06 Impact</a>
+    <a href="#stack">07 Stack</a>
+  </div>
+</div></nav>
+
+<!-- HERO -->
+<header class="wrap">
+  <div class="hero-badge">🏆 Hackathon Finals · Causal AI · Climate Finance</div>
+  <h1 class="hero-title">When the Monsoon Falters,<br/>the Market Unravels.</h1>
+  <p class="hero-sub">RainLoom is a causal ML system that predicts Indian NSE textile stock volatility from monsoon rainfall deficits — and converts that signal into investor alerts, farmer payouts, and gender-risk heatmaps.</p>
+  <div class="hero-chips">
+    <span class="chip"><span class="chip-dot" style="background:var(--green)"></span>AUC-ROC 0.81</span>
+    <span class="chip"><span class="chip-dot" style="background:var(--blue)"></span>IV F-Stat 5.8 · p&lt;0.05</span>
+    <span class="chip"><span class="chip-dot" style="background:var(--cyan)"></span>8 NSE Stocks Tracked</span>
+    <span class="chip"><span class="chip-dot" style="background:var(--purple)"></span>83 Cotton Districts</span>
+    <span class="chip"><span class="chip-dot" style="background:var(--gold)"></span>4-Week Lead Time</span>
+    <span class="chip"><span class="chip-dot" style="background:var(--pink)"></span>27M Women Tracked</span>
+    <span class="chip"><span class="chip-dot" style="background:var(--red)"></span>Payout in 4 Seconds</span>
+  </div>
+</header>
+
+<!-- ══════ 01 PROBLEM ══════ -->
+<section class="section" id="problem"><div class="wrap">
+  <hr class="divider"/>
+  <div class="section-label">01 — The Problem</div>
+  <h2 class="section-title">Three Broken Systems, One Root Cause</h2>
+  <p class="section-sub">India's ₹7 lakh crore textile industry is dangerously exposed to monsoon disruptions — yet nobody had connected these dots with AI before RainLoom.</p>
+  <div class="problem-grid reveal">
+    <div class="prob-card red">
+      <div class="prob-icon">📉</div>
+      <div class="prob-title">Textile Stocks Crash Silently</div>
+      <div class="prob-desc">When rainfall is 20%+ below normal, cotton yields drop. Input costs spike. Investors discover the crash only <em>after</em> it happens — too late to hedge.</div>
+      <span class="prob-stat st-r">No predictive system existed</span>
+    </div>
+    <div class="prob-card gold">
+      <div class="prob-icon">🧑‍🌾</div>
+      <div class="prob-title">Farmers Wait 190 Days for Insurance</div>
+      <div class="prob-desc">India's PMFBY crop insurance scheme requires inspector visits and mountains of paperwork. By the time a farmer gets paid, debt has compounded.</div>
+      <span class="prob-stat st-g">PMFBY avg claim: 190 days</span>
+    </div>
+    <div class="prob-card purple">
+      <div class="prob-icon">👩</div>
+      <div class="prob-title">60% of Workers Are Invisible</div>
+      <div class="prob-desc">60% of India's 45M textile workers are women. When factories shut due to cotton shortages, no public dataset shows who loses their income first.</div>
+      <span class="prob-stat st-p">Zero public gender-risk data</span>
+    </div>
+  </div>
+  <div style="margin-top:28px;padding:18px 22px;background:rgba(59,130,246,.06);border:1px solid var(--border-a);border-radius:14px;">
+    <p style="font-size:.92rem;color:var(--t2);line-height:1.7;"><strong style="color:var(--t1)">RainLoom fixes all three</strong> with a single causal AI pipeline: it reads the sky, proves causation mathematically, runs three ML models, and routes the output to investors, farmers, and policymakers — simultaneously.</p>
+  </div>
+</div></section>
+
+<!-- ══════ 02 PIPELINE ══════ -->
+<section class="section" id="pipeline"><div class="wrap">
+  <hr class="divider"/>
+  <div class="section-label">02 — End-to-End Pipeline</div>
+  <h2 class="section-title">How RainLoom Thinks: 7 Steps</h2>
+  <p class="section-sub">Click any step to expand the technical detail, data sources, and real code from the repository.</p>
+  <div class="pipeline-wrapper"><div style="display:flex;flex-direction:column;gap:0">
+
+    <!-- S1 -->
+    <div class="pipeline-step s1">
+      <div class="step-num-col"><div class="step-circle">🛰️</div><div class="pipe-line"></div></div>
+      <div class="step-arrow">→</div>
+      <div class="step-body" onclick="toggleStep(1)">
+        <div class="step-header"><span class="step-tag">Data Ingestion</span><span class="expand-hint"><span class="chevron" id="chev1">›</span> Expand</span></div>
+        <div class="step-name">Collect Weather, Market & Satellite Data</div>
+        <div class="step-desc">RainLoom simultaneously pulls from 4 live data sources: NASA satellites (plant health), NOAA (ocean index), IMD (83 district rainfall), and yFinance (8 NSE stocks).</div>
+        <div class="step-detail" id="det1"><div class="detail-inner">
+          <div class="detail-grid">
+            <div class="detail-item"><div class="detail-item-label">🛰️ NASA MODIS/NDVI</div><div class="detail-item-val" style="color:var(--green)">Plant health per district</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">NDVI (Normalized Difference Vegetation Index) — green = healthy crops, brown = drought stress. Updated daily.</div></div>
+            <div class="detail-item"><div class="detail-item-label">🌊 NOAA ENSO ONI</div><div class="detail-item-val" style="color:var(--cyan)">El Niño / La Niña Index</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">Pacific Ocean temperature anomaly that steers India's monsoon. This is our causal backbone instrument for 2SLS.</div></div>
+            <div class="detail-item"><div class="detail-item-label">🌧️ Open-Meteo / IMD</div><div class="detail-item-val" style="color:var(--blue)">83 district rainfall anomalies</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">Deficit = (Actual − LPA)/LPA × 100%. Triggers alert when any district crosses −20%.</div></div>
+            <div class="detail-item"><div class="detail-item-label">📈 yFinance NSE</div><div class="detail-item-val" style="color:var(--gold)">8 textile stock OHLCV</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">PAGEIND, GRASIM, TRIDENT, RAYMOND, WELSPUN, ARVIND, ALOKTEXT, KITEX — weekly closes.</div></div>
+          </div>
+          <div class="code-snip">import yfinance as yf
+TICKERS = ["PAGEIND.NS","GRASIM.NS","TRIDENT.NS","RAYMOND.NS"]
+data = yf.download(TICKERS, period="5y", interval="1wk")
+# NASA NDVI via GIBS tile URL → Plotly choropleth overlay
+# ENSO ONI from NOAA public CSV (monthly)</div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- S2 -->
+    <div class="pipeline-step s2">
+      <div class="step-num-col"><div class="step-circle">🔬</div><div class="pipe-line"></div></div>
+      <div class="step-arrow">→</div>
+      <div class="step-body" onclick="toggleStep(2)">
+        <div class="step-header"><span class="step-tag">Causal Proof</span><span class="expand-hint"><span class="chevron" id="chev2">›</span> Expand</span></div>
+        <div class="step-name">Prove It's Causation, Not Just Correlation</div>
+        <div class="step-desc">Before any ML model runs, RainLoom mathematically proves that monsoon <em>causes</em> textile stock volatility — using three independent statistical tests.</div>
+        <div class="step-detail" id="det2"><div class="detail-inner">
+          <div class="detail-grid">
+            <div class="detail-item"><div class="detail-item-label">📊 Granger Causality</div><div class="detail-item-val" style="color:var(--blue)">Lagged rain predicts stock vol?</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">Tests whether past rainfall values statistically improve predictions of future stock volatility. If yes — Granger says it's causal. Optimal lag: 4–6 weeks.</div></div>
+            <div class="detail-item"><div class="detail-item-label">🎯 IV / 2SLS  F=5.8</div><div class="detail-item-val" style="color:var(--green)">ENSO as exogenous instrument</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">ENSO drives monsoon but has NO direct effect on textile stocks — perfect instrument. First-stage F=5.8, p&lt;0.05 confirms the causal chain.</div></div>
+            <div class="detail-item"><div class="detail-item-label">🔗 VAR / Johansen</div><div class="detail-item-val" style="color:var(--purple)">Long-run cointegration</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">Tests whether rainfall, cotton price, and stock volatility share a long-run equilibrium — proving the chain is structural, not coincidental.</div></div>
+            <div class="detail-item"><div class="detail-item-label">⏱️ Total Lead Time</div><div class="detail-item-val" style="color:var(--gold)">6–10 weeks early warning</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">Rainfall → cotton yield: 4–6w lag. Cotton price → stock vol: 2–4w lag. Combined: RainLoom warns investors 6–10 weeks before a crash.</div></div>
+          </div>
+          <div class="code-snip"># Granger Causality Test (causal.py)
+gc = grangercausalitytests(df[["stock_vol","rainfall"]], maxlag=12)
+# → p < 0.05 at lag 4 ✓  rainfall Granger-causes volatility
+
+# IV/2SLS: Stage 1 — Regress rainfall on ENSO
+# Stage 2 — Use fitted rainfall → stock volatility
+# F-stat 5.8 confirms instrument relevance</div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- S3 -->
+    <div class="pipeline-step s3">
+      <div class="step-num-col"><div class="step-circle">🧠</div><div class="pipe-line"></div></div>
+      <div class="step-arrow">→</div>
+      <div class="step-body" onclick="toggleStep(3)">
+        <div class="step-header"><span class="step-tag">ML Ensemble</span><span class="expand-hint"><span class="chevron" id="chev3">›</span> Expand</span></div>
+        <div class="step-name">Three AI Models → One Risk Score (0–1)</div>
+        <div class="step-desc">MS-GARCH detects market regime, XGBoost classifies risk from 40+ features, MLP captures sequential patterns. Their weighted output = the Risk Score.</div>
+        <div class="step-detail" id="det3"><div class="detail-inner">
+          <div class="detail-grid">
+            <div class="detail-item"><div class="detail-item-label">📉 MS-GARCH (regime.py)</div><div class="detail-item-val" style="color:var(--purple)">Market mood detector</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">Detects CALM vs VOLATILE regime using return variance clustering. Outputs: regime probability + expected σ. Weight: 35%.</div></div>
+            <div class="detail-item"><div class="detail-item-label">🌳 XGBoost (xgb_classifier.py)</div><div class="detail-item-val" style="color:var(--blue)">Feature impact mapper</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">847 gradient-boosted trees on 40+ features. SHAP explainer shows exactly WHICH feature drove the risk. Weight: 40%.</div></div>
+            <div class="detail-item"><div class="detail-item-label">🔡 MLP (lstm_model.py)</div><div class="detail-item-val" style="color:var(--cyan)">Sequential pattern finder</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">12-week sliding window neural net. Catches sustained drought trends that point-in-time models miss. Weight: 25%.</div></div>
+            <div class="detail-item"><div class="detail-item-label">🎯 Final Score</div><div class="detail-item-val" style="color:var(--green)">AUC-ROC 0.81</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">0.0–0.4 = LOW · 0.4–0.6 = MODERATE · 0.6–0.8 = HIGH · 0.8+ = EXTREME. Every downstream action is triggered by this single float.</div></div>
+          </div>
+          <div class="code-snip">regime_prob = ms_garch.predict(returns)       # volatility regime
+xgb_score   = xgb_model.predict_proba(X)[1]   # risk probability
+mlp_score   = mlp.forward(X_window)            # sequential score
+
+risk_score  = 0.35*regime_prob + 0.40*xgb_score + 0.25*mlp_score
+# → single float [0,1] — drives every downstream decision</div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- S4 -->
+    <div class="pipeline-step s4">
+      <div class="step-num-col"><div class="step-circle">📰</div><div class="pipe-line"></div></div>
+      <div class="step-arrow">→</div>
+      <div class="step-body" onclick="toggleStep(4)">
+        <div class="step-header"><span class="step-tag">NLP Intelligence</span><span class="expand-hint"><span class="chevron" id="chev4">›</span> Expand</span></div>
+        <div class="step-name">Read the News. Spot the Divergence.</div>
+        <div class="step-desc">FinBERT reads live market headlines. If the news says "market is great" but our AI sees severe drought — that divergence gap = the best time to hedge.</div>
+        <div class="step-detail" id="det4"><div class="detail-inner">
+          <p style="font-size:.87rem;color:var(--t2);margin-bottom:11px"><strong style="color:var(--t1)">Information Divergence</strong> = RainLoom's physical drought signal leads market sentiment by weeks. This gap is exploitable alpha.</p>
+          <div class="detail-grid">
+            <div class="detail-item"><div class="detail-item-label">🤖 HuggingFace FinBERT</div><div class="detail-item-val" style="color:var(--blue)">Financial sentiment scoring</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">BERT fine-tuned on financial news. Classifies each headline as Positive / Neutral / Negative.</div></div>
+            <div class="detail-item"><div class="detail-item-label">📡 Divergence Detector</div><div class="detail-item-val" style="color:var(--red)">"Market is wrong" signal</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">FinBERT = POSITIVE + risk_score &gt; 0.6 → market hasn't priced the drought yet → hedge now.</div></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- S5 -->
+    <div class="pipeline-step s5">
+      <div class="step-num-col"><div class="step-circle">🗺️</div><div class="pipe-line"></div></div>
+      <div class="step-arrow">→</div>
+      <div class="step-body" onclick="toggleStep(5)">
+        <div class="step-header"><span class="step-tag">Geospatial Engine</span><span class="expand-hint"><span class="chevron" id="chev5">›</span> Expand</span></div>
+        <div class="step-name">Map Risk to Every Cotton District</div>
+        <div class="step-desc">Risk scores are mapped onto 83 Indian cotton-belt districts with NASA satellite overlays. You can see exactly WHERE the drought is worst, not just how bad it is.</div>
+        <div class="step-detail" id="det5"><div class="detail-inner">
+          <div class="detail-grid">
+            <div class="detail-item"><div class="detail-item-label">🌿 NASA MODIS NDVI</div><div class="detail-item-val" style="color:var(--green)">True-color satellite tiles</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">NASA GIBS raster tiles overlaid on a Plotly choropleth. Green = healthy. Red-brown = drought stressed. Daily updates.</div></div>
+            <div class="detail-item"><div class="detail-item-label">📍 83 Cotton Districts</div><div class="detail-item-val" style="color:var(--cyan)">Maharashtra, Gujarat, Telangana…</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">GeoJSON polygons. Each district has its own rainfall deficit, NDVI index, and propagated risk level shown with color coding.</div></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- S6 -->
+    <div class="pipeline-step s6">
+      <div class="step-num-col"><div class="step-circle">🚨</div><div class="pipe-line"></div></div>
+      <div class="step-arrow">→</div>
+      <div class="step-body" onclick="toggleStep(6)">
+        <div class="step-header"><span class="step-tag">Alert Engine</span><span class="expand-hint"><span class="chevron" id="chev6">›</span> Expand</span></div>
+        <div class="step-name">Autonomous Multi-Channel Alert Dispatch</div>
+        <div class="step-desc">A daemon thread polls all 8 stocks + 83 districts every 15 min. The moment a threshold is breached for the first time, HTML emails and Telegram messages fire automatically.</div>
+        <div class="step-detail" id="det6"><div class="detail-inner">
+          <div class="detail-grid">
+            <div class="detail-item"><div class="detail-item-label">📧 Email Scheduler</div><div class="detail-item-val" style="color:var(--red)">Daemon thread · No Celery</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">threading.Thread(daemon=True) inside Streamlit. smtplib + MIME sends dark-themed gradient HTML emails. No Redis/Kafka needed.</div></div>
+            <div class="detail-item"><div class="detail-item-label">🤖 Telegram Bot</div><div class="detail-item-val" style="color:var(--blue)">python-telegram-bot SDK</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">Severity-coded push notifications to phone within seconds. Three triggers: stock HIGH/EXTREME · sector jump +10% · district deficit &lt;−20%.</div></div>
+          </div>
+          <div class="code-snip">def _scheduler_loop():
+    seen = set()
+    while True:
+        alerts = check_all_thresholds()     # all 8 stocks + 83 districts
+        for a in alerts:
+            if a["id"] not in seen:         # first-breach only
+                send_alert_email_html(subscribers, a, smtp_cfg)
+                seen.add(a["id"])
+        time.sleep(INTERVAL_MINUTES * 60)
+
+threading.Thread(target=_scheduler_loop, daemon=True).start()</div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- S7 -->
+    <div class="pipeline-step s7">
+      <div class="step-num-col"><div class="step-circle">⚡</div></div>
+      <div class="step-arrow">→</div>
+      <div class="step-body" onclick="toggleStep(7)">
+        <div class="step-header"><span class="step-tag">Social Impact</span><span class="expand-hint"><span class="chevron" id="chev7">›</span> Expand</span></div>
+        <div class="step-name">Parametric Insurance & Women's Livelihood Layer</div>
+        <div class="step-desc">The same risk score that warns investors also pays farmers in 4 seconds — and highlights which women workers are at risk before factories shut down.</div>
+        <div class="step-detail" id="det7"><div class="detail-inner">
+          <div class="detail-grid">
+            <div class="detail-item"><div class="detail-item-label">⚡ Parametric Payout</div><div class="detail-item-val" style="color:var(--gold)">PMFBY replacement: 4 seconds</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">Risk trigger confirmed → Aadhaar-linked UPI payout dispatched. No inspector. No paperwork. No 190-day wait.</div></div>
+            <div class="detail-item"><div class="detail-item-label">👩 Women's Heatmap</div><div class="detail-item-val" style="color:var(--pink)">India's only gender-risk dataset</div><div style="font-size:.78rem;color:var(--t2);margin-top:4px">27M women workers mapped by state × risk level × factory type. Shows who loses income first — BEFORE the factory shuts.</div></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+  </div></div>
+</div></section>
+
+<!-- ══════ 03 ML ENGINE ══════ -->
+<section class="section" id="ml-engine"><div class="wrap">
+  <hr class="divider"/>
+  <div class="section-label">03 — ML Engine Simulation</div>
+  <h2 class="section-title">Watch the AI Think: Step by Step</h2>
+  <p class="section-sub">Each tab simulates a real stage of the ML pipeline — click Run and watch the actual process unfold. Go in order: Ingest → Features → GARCH → XGBoost → MLP → Ensemble.</p>
+
+  <div class="reveal" style="margin-top:32px">
+    <div class="ml-tabs">
+      <button class="ml-tab active" onclick="switchTab('ingest')">🛰️ 1. Data Ingest</button>
+      <button class="ml-tab" onclick="switchTab('features')">⚙️ 2. Features</button>
+      <button class="ml-tab" onclick="switchTab('garch')">📉 3. MS-GARCH</button>
+      <button class="ml-tab" onclick="switchTab('xgb')">🌳 4. XGBoost</button>
+      <button class="ml-tab" onclick="switchTab('mlp')">🔡 5. MLP Net</button>
+      <button class="ml-tab" onclick="switchTab('ensemble')">🎯 6. Ensemble</button>
+    </div>
+
+    <!-- TAB 1 -->
+    <div class="ml-panel active" id="tab-ingest">
+      <div class="data-flow-board shimmer-top" style="position:relative;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+          <div><div style="font-size:.87rem;font-weight:700;color:var(--t1);margin-bottom:3px;">📡 Live API Fetch Simulator</div><div style="font-size:.76rem;color:var(--t2);">Simulates the 4 real API calls RainLoom makes on every run — with realistic latency and row counts</div></div>
+          <button class="run-btn" id="ingest-btn" onclick="runIngestion()">▶ Run Ingestion</button>
+        </div>
+        <div class="source-grid">
+          <div class="source-card" id="src-nasa"><div class="source-icon">🛰️</div><div class="source-name">NASA MODIS</div><div class="source-status" id="src-nasa-status" style="color:var(--t3)">IDLE</div><div class="source-bar-wrap"><div class="source-bar" id="src-nasa-bar"></div></div></div>
+          <div class="source-card" id="src-noaa"><div class="source-icon">🌊</div><div class="source-name">NOAA ENSO</div><div class="source-status" id="src-noaa-status" style="color:var(--t3)">IDLE</div><div class="source-bar-wrap"><div class="source-bar" id="src-noaa-bar"></div></div></div>
+          <div class="source-card" id="src-imd"><div class="source-icon">🌧️</div><div class="source-name">IMD Rainfall</div><div class="source-status" id="src-imd-status" style="color:var(--t3)">IDLE</div><div class="source-bar-wrap"><div class="source-bar" id="src-imd-bar"></div></div></div>
+          <div class="source-card" id="src-yf"><div class="source-icon">📈</div><div class="source-name">yFinance NSE</div><div class="source-status" id="src-yf-status" style="color:var(--t3)">IDLE</div><div class="source-bar-wrap"><div class="source-bar" id="src-yf-bar"></div></div></div>
+        </div>
+        <div class="ingestion-log" id="ingest-log"><span style="color:var(--t3)">→ Click "Run Ingestion" to simulate the fetch pipeline</span></div>
+      </div>
+    </div>
+
+    <!-- TAB 2 -->
+    <div class="ml-panel" id="tab-features">
+      <div class="feat-board shimmer-top" style="position:relative;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+          <div><div style="font-size:.87rem;font-weight:700;color:var(--t1);margin-bottom:3px;">⚙️ Feature Engineering Pipeline</div><div style="font-size:.76rem;color:var(--t2);">Raw inputs → normalised, lag-calculated features. SHAP importance shown as bar width.</div></div>
+          <button class="run-btn" id="feat-btn" onclick="runFeatures()">▶ Process Features</button>
+        </div>
+        <div id="feat-rows"></div>
+      </div>
+    </div>
+
+    <!-- TAB 3 -->
+    <div class="ml-panel" id="tab-garch">
+      <div class="data-flow-board shimmer-top" style="position:relative;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div><div style="font-size:.87rem;font-weight:700;color:var(--t1);margin-bottom:3px;">📉 MS-GARCH: Market Regime Detector</div><div style="font-size:.76rem;color:var(--t2);">Markov-Switching GARCH detects CALM vs VOLATILE regime using 52-week return variance clustering</div></div>
+          <button class="run-btn" id="garch-btn" onclick="runGARCH()">▶ Fit GARCH</button>
+        </div>
+        <div><div style="font-size:.7rem;color:var(--t3);margin-bottom:7px;font-weight:700;text-transform:uppercase;letter-spacing:.08em">Weekly Returns Volatility σ² — last 52 weeks</div><div class="garch-chart" id="garch-chart"></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+          <div class="model-panel"><div class="model-output-label">Current Regime</div><div class="model-output-val" id="garch-regime" style="font-size:1.2rem;color:var(--t3)">—</div></div>
+          <div class="model-panel"><div class="model-output-label">Regime Probability</div><div class="model-output-val" id="garch-prob" style="font-size:1.2rem;color:var(--t3)">—</div></div>
+          <div class="model-panel"><div class="model-output-label">Expected Volatility σ</div><div class="model-output-val" id="garch-vol" style="font-size:1.2rem;color:var(--t3)">—</div></div>
+        </div>
+        <div class="ingestion-log" id="garch-log"><span style="color:var(--t3)">→ Click "Fit GARCH" to run regime detection</span></div>
+      </div>
+    </div>
+
+    <!-- TAB 4 -->
+    <div class="ml-panel" id="tab-xgb">
+      <div class="data-flow-board shimmer-top" style="position:relative;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div><div style="font-size:.87rem;font-weight:700;color:var(--t1);margin-bottom:3px;">🌳 XGBoost: Feature-Impact Risk Classifier</div><div style="font-size:.76rem;color:var(--t2);">847 gradient-boosted decision trees classify HIGH/LOW risk. SHAP shows which features drove it.</div></div>
+          <button class="run-btn" id="xgb-btn" onclick="runXGB()">▶ Run XGBoost</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;">
+          <div>
+            <div style="font-size:.7rem;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px">Decision Tree (simplified, 3 levels)</div>
+            <div id="xgb-tree">
+              <div class="xgb-level"><div class="xgb-node" style="background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.3);color:var(--blue)">Rainfall &lt; −20%?</div></div>
+              <div class="xgb-level">
+                <div class="xgb-node" style="background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2);color:var(--gold)">ENSO &gt; 0.5?</div>
+                <div class="xgb-node" style="background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2);color:var(--green)">Cotton +15%?</div>
+              </div>
+              <div class="xgb-level" id="xgb-leaves">
+                <div class="xgb-node" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:var(--red)">HIGH 0.82</div>
+                <div class="xgb-node" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:var(--gold)">MID 0.54</div>
+                <div class="xgb-node" style="background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3);color:var(--green)">LOW 0.21</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:.7rem;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px">SHAP Feature Importance</div>
+            <div id="shap-bars"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:13px">
+          <div class="model-panel"><div class="model-output-label">XGBoost Risk Score</div><div class="model-output-val" id="xgb-score" style="color:var(--t3)">—</div></div>
+          <div class="model-panel"><div class="model-output-label">Classification</div><div class="model-output-val" id="xgb-class" style="font-size:1rem;color:var(--t3)">—</div></div>
+        </div>
+        <div class="ingestion-log" id="xgb-log" style="margin-top:13px"><span style="color:var(--t3)">→ Click "Run XGBoost" to simulate inference</span></div>
+      </div>
+    </div>
+
+    <!-- TAB 5 -->
+    <div class="ml-panel" id="tab-mlp">
+      <div class="data-flow-board shimmer-top" style="position:relative;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div><div style="font-size:.87rem;font-weight:700;color:var(--t1);margin-bottom:3px;">🔡 MLP Neural Network: Sequential Patterns</div><div style="font-size:.76rem;color:var(--t2);">3-layer net with 12-week sliding windows. Neurons light up as activations propagate layer by layer.</div></div>
+          <button class="run-btn" id="mlp-btn" onclick="runMLP()">▶ Forward Pass</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:20px;align-items:center">
+          <div>
+            <div style="font-size:.7rem;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Architecture: 6→8→4→1 (ReLU + Sigmoid)</div>
+            <div class="mlp-net" id="mlp-net"></div>
+          </div>
+          <div>
+            <div style="font-size:.7rem;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px">12-Week Input Window</div>
+            <canvas id="mlp-window" width="280" height="96" style="border-radius:8px;border:1px solid var(--border);width:100%"></canvas>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:11px">
+              <div class="model-panel"><div class="model-output-label">MLP Output</div><div class="model-output-val" id="mlp-score" style="color:var(--t3)">—</div></div>
+              <div class="model-panel"><div class="model-output-label">Trend Signal</div><div class="model-output-val" id="mlp-trend" style="font-size:.9rem;color:var(--t3)">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="ingestion-log" id="mlp-log" style="margin-top:13px"><span style="color:var(--t3)">→ Click "Forward Pass" to animate the neural network</span></div>
+      </div>
+    </div>
+
+    <!-- TAB 6 -->
+    <div class="ml-panel" id="tab-ensemble">
+      <div class="ensemble-board shimmer-top" style="position:relative;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;">
+          <div><div style="font-size:.87rem;font-weight:700;color:var(--t1);margin-bottom:3px;">🎯 Ensemble Combiner: The Final Number</div><div style="font-size:.76rem;color:var(--t2);">Weighted combination of all 3 models → one risk score → drives everything downstream. Run each model tab first for best results.</div></div>
+          <button class="run-btn" id="ens-btn" onclick="runEnsemble()">▶ Combine Models</button>
+        </div>
+        <div class="ensemble-flow">
+          <div class="ens-input"><div class="ens-input-name">MS-GARCH</div><div class="ens-input-val" id="ens-garch" style="color:var(--purple)">—</div><div style="font-size:.65rem;color:var(--t3);margin-top:3px">weight: 35%</div></div>
+          <div class="ens-arrow">+</div>
+          <div class="ens-input"><div class="ens-input-name">XGBoost</div><div class="ens-input-val" id="ens-xgb" style="color:var(--blue)">—</div><div style="font-size:.65rem;color:var(--t3);margin-top:3px">weight: 40%</div></div>
+          <div class="ens-arrow">+</div>
+          <div class="ens-input"><div class="ens-input-name">MLP</div><div class="ens-input-val" id="ens-mlp" style="color:var(--cyan)">—</div><div style="font-size:.65rem;color:var(--t3);margin-top:3px">weight: 25%</div></div>
+        </div>
+        <div style="text-align:center;font-size:1.6rem;color:var(--t3);margin-bottom:14px">↓</div>
+        <div class="ens-output">
+          <div class="ens-out-label">🎯 Final Ensemble Risk Score</div>
+          <div class="ens-out-val" id="ens-final">—</div>
+          <div id="ens-badge" class="ens-out-badge" style="background:rgba(255,255,255,.07);color:var(--t2)">AWAITING INPUT</div>
+        </div>
+        <div class="ens-formula" id="ens-formula">risk = 0.35 × GARCH + 0.40 × XGBoost + 0.25 × MLP</div>
+        <div class="ens-weight-row">
+          <div class="ens-weight"><div class="ens-w-name">GARCH Contrib</div><div class="ens-w-val" id="ens-contrib-g" style="color:var(--purple)">—</div></div>
+          <div class="ens-weight"><div class="ens-w-name">XGBoost Contrib</div><div class="ens-w-val" id="ens-contrib-x" style="color:var(--blue)">—</div></div>
+          <div class="ens-weight"><div class="ens-w-name">MLP Contrib</div><div class="ens-w-val" id="ens-contrib-m" style="color:var(--cyan)">—</div></div>
+        </div>
+        <div class="ingestion-log" id="ens-log" style="margin-top:13px"><span style="color:var(--t3)">→ Click "Combine Models" to compute the weighted ensemble</span></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ══════ 04 FINAL OUTPUT ══════ -->
+<section class="section" id="output"><div class="wrap">
+  <hr class="divider"/>
+  <div class="section-label">04 — Final Output</div>
+  <h2 class="section-title">What Does RainLoom Actually Produce?</h2>
+  <p class="section-sub">The risk score doesn't sit in a database. It instantly fans out into four tangible outputs — each one shown below exactly as it appears in the live system.</p>
+
+  <div class="output-grid reveal">
+
+    <!-- Output 1: Risk Gauges -->
+    <div class="output-card oc-blue">
+      <div class="output-icon">📊</div>
+      <div class="output-title">Live Risk Gauges — 8 NSE Stocks</div>
+      <div class="output-desc">Each stock gets its own real-time risk score ring. Color codes: Green (LOW) → Amber (MODERATE) → Red (HIGH) → Pulsing Red (EXTREME). Updated every 15 minutes.</div>
+      <div class="gauge-row" id="gauges"></div>
+    </div>
+
+    <!-- Output 2: Alert Email -->
+    <div class="output-card oc-red">
+      <div class="output-icon">📧</div>
+      <div class="output-title">Auto-Triggered HTML Alert Email</div>
+      <div class="output-desc">The moment a threshold is crossed for the first time, a richly-formatted HTML email fires automatically to all subscribers. No human click required.</div>
+      <div class="email-mock">
+        <div class="email-header">🚨 RainLoom CRITICAL ALERT — PAGEIND.NS Risk: EXTREME</div>
+        <div class="email-body">
+          <div class="email-row"><span class="email-label">Stock</span><span class="email-val" style="color:var(--red)">PAGEIND.NS</span></div>
+          <div class="email-row"><span class="email-label">Risk Score</span><span class="email-val" style="color:var(--red)">0.84 · EXTREME</span></div>
+          <div class="email-row"><span class="email-label">Trigger</span><span class="email-val">First breach ≥ 0.80</span></div>
+          <div class="email-row"><span class="email-label">Rainfall Deficit</span><span class="email-val" style="color:var(--gold)">−34% from LPA</span></div>
+          <div class="email-row"><span class="email-label">ENSO ONI</span><span class="email-val" style="color:var(--gold)">+1.4 (El Niño)</span></div>
+          <div class="email-row"><span class="email-label">Dispatched</span><span class="email-val" style="color:var(--green)">2.1 sec ago</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output 3: Parametric Payout -->
+    <div class="output-card oc-green">
+      <div class="output-icon">⚡</div>
+      <div class="output-title">Parametric Insurance Payout — 4 Seconds</div>
+      <div class="output-desc">Same risk trigger that warns investors also dispatches a farm payout. No inspector. No form. Zero paperwork. Watch the timeline — click to replay.</div>
+      <div class="payout-timeline" id="payout-timeline">
+        <div class="payout-step" id="ps1"><div class="payout-num" style="background:rgba(16,185,129,.2);color:var(--green)">1</div><div class="payout-text">Rainfall deficit confirmed: −38% · NDVI health: 0.22</div><div class="payout-time" style="color:var(--green)">0.0s</div></div>
+        <div class="payout-step" id="ps2"><div class="payout-num" style="background:rgba(255,255,255,.06);color:var(--t3)">2</div><div class="payout-text">Risk score ≥ 0.80 threshold crossed → trigger fired</div><div class="payout-time" style="color:var(--t3)">0.3s</div></div>
+        <div class="payout-step" id="ps3"><div class="payout-num" style="background:rgba(255,255,255,.06);color:var(--t3)">3</div><div class="payout-text">Aadhaar-linked farmer ID verified via AEPS</div><div class="payout-time" style="color:var(--t3)">1.1s</div></div>
+        <div class="payout-step" id="ps4"><div class="payout-num" style="background:rgba(255,255,255,.06);color:var(--t3)">4</div><div class="payout-text">UPI payout ₹12,500 dispatched to bank account</div><div class="payout-time" style="color:var(--t3)">3.8s</div></div>
+        <div class="payout-step" id="ps5"><div class="payout-num" style="background:rgba(255,255,255,.06);color:var(--t3)">5</div><div class="payout-text">✅ Payment confirmed · SMS sent · Log archived</div><div class="payout-time" style="color:var(--t3)">4.1s</div></div>
+      </div>
+      <button class="run-btn" style="margin-top:14px;margin-bottom:0" onclick="replayPayout()">↺ Replay Payout</button>
+
+      <!-- Security Layer -->
+      <button class="sec-toggle" id="sec-toggle-btn" onclick="toggleSecurity()">
+        🔐 How is this secure? See all 6 protection layers
+        <span class="sec-chev">›</span>
+      </button>
+      <div class="sec-panel" id="sec-panel">
+        <div class="sec-panel-inner">
+
+          <div class="sec-summary-bar">
+            <div class="ssb-item"><div class="ssb-val" style="color:var(--green)">6</div><div class="ssb-label">Security Layers</div></div>
+            <div class="ssb-item"><div class="ssb-val" style="color:var(--blue)">2-of-2</div><div class="ssb-label">Source Consensus</div></div>
+            <div class="ssb-item"><div class="ssb-val" style="color:var(--purple)">Immutable</div><div class="ssb-label">Audit Log</div></div>
+          </div>
+
+          <div class="sec-layer">
+            <div class="sec-layer-icon">🌦️</div>
+            <div class="sec-layer-body">
+              <div class="sec-layer-title">Dual-Source Trigger Consensus <span class="sec-badge sb-green">ANTI-FRAUD</span></div>
+              <div class="sec-layer-desc">A payout can only fire if <strong style="color:var(--t1)">both</strong> independent data sources agree: IMD/Open-Meteo must report ≥ −20% rainfall deficit <em>AND</em> NASA NDVI must confirm crop stress ≤ 0.30. A false alert from one source alone is never enough to trigger payment — preventing fraud from data corruption or API spoofing.</div>
+            </div>
+          </div>
+
+          <div class="sec-layer">
+            <div class="sec-layer-icon">🪪</div>
+            <div class="sec-layer-body">
+              <div class="sec-layer-title">Aadhaar eKYC + AEPS Biometric <span class="sec-badge sb-blue">IDENTITY</span></div>
+              <div class="sec-layer-desc">Every registered farmer is authenticated via <strong style="color:var(--t1)">Aadhaar-linked eKYC</strong> (Government of India's biometric ID system). Payout is routed only to the verified bank account in the National Payments Council (NPCI) database — no cash, no third-party accounts. A fraudster cannot redirect funds without biometric authentication.</div>
+            </div>
+          </div>
+
+          <div class="sec-layer">
+            <div class="sec-layer-icon">📍</div>
+            <div class="sec-layer-body">
+              <div class="sec-layer-title">District Geo-Fencing <span class="sec-badge sb-gold">LOCATION</span></div>
+              <div class="sec-layer-desc">Farmers are enrolled with their land parcel's district code. At trigger time, the system checks that their registered district is among the <strong style="color:var(--t1)">83 cotton-belt districts</strong> currently showing a validated rainfall deficit. A farmer in a non-affected district cannot claim — even if they are otherwise eligible.</div>
+            </div>
+          </div>
+
+          <div class="sec-layer">
+            <div class="sec-layer-icon">📱</div>
+            <div class="sec-layer-body">
+              <div class="sec-layer-title">SMS OTP Confirmation <span class="sec-badge sb-purple">2FA</span></div>
+              <div class="sec-layer-desc">Before the UPI transfer is dispatched, a <strong style="color:var(--t1)">one-time password is sent to the farmer's registered mobile number</strong>. The farmer must confirm within 90 seconds. This two-factor step ensures that even if an Aadhaar number is compromised, money cannot move without phone access.</div>
+            </div>
+          </div>
+
+          <div class="sec-layer">
+            <div class="sec-layer-icon">🔒</div>
+            <div class="sec-layer-body">
+              <div class="sec-layer-title">Per-Farmer Seasonal Payout Cap <span class="sec-badge sb-red">ABUSE PREVENTION</span></div>
+              <div class="sec-layer-desc">Each farmer account has a <strong style="color:var(--t1)">maximum of one payout per drought event per season</strong>. The event deduplication key is computed from: Farmer ID + District Code + Season Year + Drought Event ID. If the same key is seen again, the system silently marks it <em>duplicate</em> and blocks re-payment — preventing replay attacks or accidental double triggers.</div>
+            </div>
+          </div>
+
+          <div class="sec-layer">
+            <div class="sec-layer-icon">📋</div>
+            <div class="sec-layer-body">
+              <div class="sec-layer-title">Immutable Audit Trail <span class="sec-badge sb-blue">COMPLIANCE</span></div>
+              <div class="sec-layer-desc">Every payout event — including the <strong style="color:var(--t1)">exact rainfall value, NDVI reading, risk score, timestamp, farmer ID, district, and UPI transaction ID</strong> — is written to an append-only log. This log is the basis for regulatory reporting, dispute resolution, and actuarial review by insurance underwriters. Nothing can be silently modified.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Output 4: Alert Stream + Telegram -->
+    <div class="output-card oc-pink">
+      <div class="output-icon">🤖</div>
+      <div class="output-title">Live Alert Stream + Telegram Push</div>
+      <div class="output-desc">The daemon thread continuously logs every threshold check. Critical alerts simultaneously push to the subscriber's Telegram — shown below as a simulated live feed.</div>
+      <div class="alert-stream" id="alert-stream">
+        <div class="al-ok">[08:00:01] Poll #1 — all 8 stocks below HIGH threshold</div>
+        <div class="al-ok">[08:15:04] Poll #2 — monsoon deficit nominal (-8%)</div>
+      </div>
+      <button class="run-btn" style="margin-top:13px;margin-bottom:0" id="stream-btn" onclick="runAlertStream()">▶ Simulate Alert Trigger</button>
+    </div>
+
+  </div>
+</div></section>
+
+<!-- ══════ 05 DASHBOARD ══════ -->
+<section class="section" id="dashboard"><div class="wrap">
+  <hr class="divider"/>
+  <div class="section-label">05 — 9-Page Streamlit Dashboard</div>
+  <h2 class="section-title">Every Page. Every Feature.</h2>
+  <p class="section-sub">The live dashboard delivers the full intelligence stack across 9 pages, with a shared real-time ENSO ticker navbar and Groq AI chat assistant on every page.</p>
+  <div class="pages-grid reveal">
+    <div class="page-card pc-blue"><div class="page-icon">📊</div><div class="page-num">Page 1</div><div class="page-title">Live Risk Monitor</div><div class="page-desc">Real-time gauges for all 8 stocks. Monsoon deficit meter. 8-week Fan Chart with 95% CI. NLP News Sentiment divergence detector.</div><span class="page-feature" style="border-color:rgba(59,130,246,.3);color:var(--blue)">⭐ Fan Chart + NLP Divergence</span></div>
+    <div class="page-card pc-purple"><div class="page-icon">🔗</div><div class="page-num">Page 2</div><div class="page-title">Causal Analysis</div><div class="page-desc">Granger heatmaps, IV/2SLS results, interactive Knowledge Graph with p-values, Sankey Supply Chain Flow diagram.</div><span class="page-feature" style="border-color:rgba(139,92,246,.3);color:var(--purple)">⭐ Sankey + Knowledge Graph</span></div>
+    <div class="page-card pc-cyan"><div class="page-icon">🤖</div><div class="page-num">Page 3</div><div class="page-title">Model Performance</div><div class="page-desc">MS-GARCH diagnostics, XGBoost SHAP plots, MLP loss curves, AUC-ROC validation, model credibility track record widget.</div><span class="page-feature" style="border-color:rgba(6,182,212,.3);color:var(--cyan)">⭐ SHAP Explainability</span></div>
+    <div class="page-card pc-gold"><div class="page-icon">🕹️</div><div class="page-num">Page 4</div><div class="page-title">Scenario Simulator</div><div class="page-desc">Stress-test any portfolio. Set −38% rainfall deficit, watch risk detonate to EXTREME. 2009 drought time-machine replay.</div><span class="page-feature" style="border-color:rgba(245,158,11,.3);color:var(--gold)">⭐ Live Stress Testing</span></div>
+    <div class="page-card pc-green"><div class="page-icon">👩</div><div class="page-num">Page 5</div><div class="page-title">Societal Impact</div><div class="page-desc">Farmer advisories in 4 languages + voice (gTTS). Parametric Payout Gateway (4s UPI). Women's Livelihood Heatmap — 27M workers.</div><span class="page-feature" style="border-color:rgba(16,185,129,.3);color:var(--green)">⭐ Parametric Payout + Women</span></div>
+    <div class="page-card pc-blue"><div class="page-icon">📈</div><div class="page-num">Page 6</div><div class="page-title">Hedging Backtest</div><div class="page-desc">MCX cotton forward contract backtesting against all drought years since 2002. 18–24% hedging gain vs. unhedged portfolio.</div><span class="page-feature" style="border-color:rgba(59,130,246,.3);color:var(--blue)">⭐ 18–24% Alpha Found</span></div>
+    <div class="page-card pc-cyan"><div class="page-icon">🗺️</div><div class="page-num">Page 7</div><div class="page-title">Geospatial Nowcast</div><div class="page-desc">83 cotton-belt districts on Plotly choropleth. NASA MODIS true-color + NDVI raster tiles overlaid. Daily satellite updates.</div><span class="page-feature" style="border-color:rgba(6,182,212,.3);color:var(--cyan)">⭐ NASA Satellite Overlay</span></div>
+    <div class="page-card pc-pink"><div class="page-icon">🏢</div><div class="page-num">Page 8</div><div class="page-title">Institutional API</div><div class="page-desc">Production B2B portal: API key generator, webhook rule builder, iFrame embeds for ERPs. Full SaaS monetization surface.</div><span class="page-feature" style="border-color:rgba(236,72,153,.3);color:var(--pink)">⭐ Real B2B Gateway</span></div>
+    <div class="page-card pc-red"><div class="page-icon">⏱️</div><div class="page-num">Page 9</div><div class="page-title">Demo Playback</div><div class="page-desc">2009 drought time-machine: click "Advance Week" — watch the Risk Gauge detonate 6 weeks before the real market crash.</div><span class="page-feature" style="border-color:rgba(239,68,68,.3);color:var(--red)">⭐ 2009 Drought Replay</span></div>
+  </div>
+</div></section>
+
+<!-- ══════ 06 IMPACT ══════ -->
+<section class="section" id="impact"><div class="wrap">
+  <hr class="divider"/>
+  <div class="section-label">06 — Societal & Gender Impact</div>
+  <h2 class="section-title">Where Finance Meets Justice</h2>
+  <div class="impact-grid reveal">
+    <div class="impact-card" style="border-color:rgba(245,158,11,.18)">
+      <div class="impact-icon">⚡</div>
+      <div class="impact-title" style="color:var(--gold)">Parametric Insurance — 4 Seconds</div>
+      <div class="impact-desc">India's PMFBY takes an average of 190 days from claim to payout, requiring physical inspector visits. By the time a farmer receives money, they've already taken high-interest debt loans to survive.</div>
+      <div class="impact-highlight" style="border-color:var(--gold)"><p>RainLoom uses the <strong>same risk score that powers investor dashboards</strong> as a smart-contract oracle. When the trigger fires — IMD rainfall confirmed + NASA NDVI crop damage confirmed — a simulated <strong>Aadhaar-linked UPI payout dispatches in 4 seconds.</strong> Zero inspectors. Zero paperwork.</p></div>
+    </div>
+    <div class="impact-card" style="border-color:rgba(236,72,153,.18)">
+      <div class="impact-icon">👩</div>
+      <div class="impact-title" style="color:var(--pink)">Women's Livelihood Heatmap</div>
+      <div class="impact-desc">60% of India's 45 million textile workers are women — roughly 27 million people. When a cotton shortage forces factories to shut, these women lose income first. Zero public datasets track this.</div>
+      <div class="impact-highlight" style="border-color:var(--pink)"><p>RainLoom built India's only public visualization showing <strong>which women workers are at economic risk</strong>, in which state, at what drought severity — all <strong>before the factory shuts</strong>. This data can directly inform state government relief policy.</p></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ══════ 07 STACK ══════ -->
+<section class="section" id="stack"><div class="wrap">
+  <hr class="divider"/>
+  <div class="section-label">07 — Technology Stack</div>
+  <h2 class="section-title">Production-Grade Infrastructure</h2>
+  <div class="tech-grid reveal">
+    <div class="tech-group">
+      <div class="tech-group-title">🧠 Machine Learning</div>
+      <span class="tech-pill" style="background:rgba(139,92,246,.1);color:var(--purple);border-color:rgba(139,92,246,.22)">MS-GARCH (arch)</span>
+      <span class="tech-pill" style="background:rgba(59,130,246,.1);color:var(--blue);border-color:rgba(59,130,246,.22)">XGBoost</span>
+      <span class="tech-pill" style="background:rgba(6,182,212,.1);color:var(--cyan);border-color:rgba(6,182,212,.22)">MLP (NumPy)</span>
+      <span class="tech-pill" style="background:rgba(16,185,129,.1);color:var(--green);border-color:rgba(16,185,129,.22)">HuggingFace FinBERT</span>
+      <span class="tech-pill" style="background:rgba(245,158,11,.1);color:var(--gold);border-color:rgba(245,158,11,.22)">statsmodels (Granger/VAR/2SLS)</span>
+      <span class="tech-pill" style="background:rgba(139,92,246,.1);color:var(--purple);border-color:rgba(139,92,246,.22)">SHAP Explainability</span>
+    </div>
+    <div class="tech-group">
+      <div class="tech-group-title">🌐 Backend & Alerting</div>
+      <span class="tech-pill" style="background:rgba(59,130,246,.1);color:var(--blue);border-color:rgba(59,130,246,.22)">Streamlit</span>
+      <span class="tech-pill" style="background:rgba(16,185,129,.1);color:var(--green);border-color:rgba(16,185,129,.22)">FastAPI + Uvicorn</span>
+      <span class="tech-pill" style="background:rgba(6,182,212,.1);color:var(--cyan);border-color:rgba(6,182,212,.22)">python-telegram-bot</span>
+      <span class="tech-pill" style="background:rgba(245,158,11,.1);color:var(--gold);border-color:rgba(245,158,11,.22)">smtplib MIME HTML</span>
+      <span class="tech-pill" style="background:rgba(139,92,246,.1);color:var(--purple);border-color:rgba(139,92,246,.22)">threading.Thread (daemon)</span>
+      <span class="tech-pill" style="background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.22)">Groq Llama 3.1 Chat</span>
+    </div>
+    <div class="tech-group">
+      <div class="tech-group-title">📡 Data & Visualization</div>
+      <span class="tech-pill" style="background:rgba(16,185,129,.1);color:var(--green);border-color:rgba(16,185,129,.22)">yFinance (NSE)</span>
+      <span class="tech-pill" style="background:rgba(59,130,246,.1);color:var(--blue);border-color:rgba(59,130,246,.22)">Open-Meteo (rainfall)</span>
+      <span class="tech-pill" style="background:rgba(6,182,212,.1);color:var(--cyan);border-color:rgba(6,182,212,.22)">NOAA ENSO ONI</span>
+      <span class="tech-pill" style="background:rgba(245,158,11,.1);color:var(--gold);border-color:rgba(245,158,11,.22)">NASA MODIS / GIBS</span>
+      <span class="tech-pill" style="background:rgba(139,92,246,.1);color:var(--purple);border-color:rgba(139,92,246,.22)">Plotly Graph Objects</span>
+      <span class="tech-pill" style="background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.22)">gTTS Voice (4 langs)</span>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <p><strong style="color:var(--t1)">RainLoom</strong> — Causal AI for Monsoon-Textile Risk</p>
+  <p style="margin-top:8px"><a href="https://rainloomtextiles.streamlit.app" target="_blank">Live App ↗</a> &nbsp;·&nbsp; <a href="https://rainloom.vercel.app" target="_blank">Landing Page ↗</a> &nbsp;·&nbsp; <a href="https://github.com/Yasaswini-ch/Rain_Loom" target="_blank">GitHub ↗</a></p>
+  <p style="margin-top:10px">Hackathon Finals · Bridging Climate Science, Equity Risk & Social Justice</p>
+</div></footer>
+
+<script>
+/* ━━ Step toggle ━━ */
+function toggleStep(n){
+  const det=document.getElementById('det'+n), chev=document.getElementById('chev'+n), body=det.closest('.step-body');
+  const was=det.classList.contains('open');
+  document.querySelectorAll('.step-detail').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.step-body').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.chevron').forEach(c=>c.classList.remove('open'));
+  if(!was){det.classList.add('open');body.classList.add('active');chev.classList.add('open');}
+}
+
+/* ━━ Security toggle ━━ */
+function toggleSecurity(){
+  const btn=document.getElementById('sec-toggle-btn');
+  const panel=document.getElementById('sec-panel');
+  const isOpen=panel.classList.contains('open');
+  btn.classList.toggle('open',!isOpen);
+  panel.classList.toggle('open',!isOpen);
+}
+
+/* ━━ Tab switch ━━ */
+function switchTab(id){
+  const ids=['ingest','features','garch','xgb','mlp','ensemble'];
+  document.querySelectorAll('.ml-tab').forEach((t,i)=>t.classList.toggle('active',ids[i]===id));
+  document.querySelectorAll('.ml-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+}
+
+/* ━━ Shared ML state ━━ */
+const mlState={garch:null,xgb:null,mlp:null};
+
+function appendLog(id,msg,cls='log-line-info'){
+  const el=document.getElementById(id);
+  const d=document.createElement('div'); d.className=cls; d.textContent=msg;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+
+/* ━━━ GAUGES (section 04) ━━━ */
+const STOCKS=[
+  {name:'PAGEIND',base:.18,sens:1.0},{name:'GRASIM',base:.14,sens:.8},
+  {name:'TRIDENT',base:.20,sens:1.1},{name:'RAYMOND',base:.16,sens:.95},
+];
+const CIRC=2*Math.PI*32;
+
+function buildGauges(){
+  document.getElementById('gauges').innerHTML=STOCKS.map((s,i)=>`
+    <div class="gauge-card">
+      <div class="gauge-name">${s.name}</div>
+      <div class="gauge-ring">
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle class="track" cx="36" cy="36" r="32" stroke-dasharray="${CIRC}" stroke-dashoffset="0"/>
+          <circle class="fill" id="gf${i}" cx="36" cy="36" r="32" stroke-dasharray="${CIRC}" stroke-dashoffset="${CIRC}" stroke="var(--green)"/>
+        </svg>
+        <div class="gauge-val" id="gv${i}" style="font-size:.95rem">--</div>
+      </div>
+      <div class="gauge-label gl-low" id="gl${i}">LOW</div>
+    </div>`).join('');
+  STOCKS.forEach((_,i)=>{
+    const risk=.18+Math.random()*.25+i*.06;
+    updateGauge(i,Math.min(risk,0.98));
+  });
+}
+
+function updateGauge(i,risk){
+  const fill=document.getElementById('gf'+i);
+  const val=document.getElementById('gv'+i);
+  const lbl=document.getElementById('gl'+i);
+  fill.style.strokeDashoffset=CIRC*(1-risk);
+  val.textContent=(risk*100).toFixed(0)+'%';
+  let color,cls,text;
+  if(risk<.4){color='var(--green)';cls='gl-low';text='LOW';}
+  else if(risk<.6){color='var(--gold)';cls='gl-mid';text='MODERATE';}
+  else if(risk<.8){color='var(--red)';cls='gl-high';text='HIGH';}
+  else{color='#ff6b6b';cls='gl-ext';text='EXTREME';}
+  fill.style.stroke=color; val.style.color=color;
+  lbl.className='gauge-label '+cls; lbl.textContent=text;
+}
+
+/* ━━━ PAYOUT REPLAY ━━━ */
+let payoutRunning=false;
+function replayPayout(){
+  if(payoutRunning)return;
+  payoutRunning=true;
+  const steps=['ps1','ps2','ps3','ps4','ps5'];
+  steps.forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.remove('done','active');
+    const num=el.querySelector('.payout-num');
+    num.style.background='rgba(255,255,255,.06)'; num.style.color='var(--t3)';
+    el.querySelector('.payout-time').style.color='var(--t3)';
+  });
+  steps.forEach((id,i)=>{
+    setTimeout(()=>{
+      if(i>0) document.getElementById(steps[i-1]).classList.replace('active','done');
+      const el=document.getElementById(id);
+      el.classList.add('active');
+      const num=el.querySelector('.payout-num');
+      num.style.background='rgba(245,158,11,.2)'; num.style.color='var(--gold)';
+      el.querySelector('.payout-time').style.color='var(--gold)';
+    },i*900);
+  });
+  setTimeout(()=>{
+    const last=document.getElementById('ps5');
+    last.classList.replace('active','done');
+    const num=last.querySelector('.payout-num');
+    num.style.background='rgba(16,185,129,.2)'; num.style.color='var(--green)';
+    last.querySelector('.payout-time').style.color='var(--green)';
+    payoutRunning=false;
+  },steps.length*900+500);
+}
+
+/* ━━━ ALERT STREAM ━━━ */
+let streamRunning=false;
+function runAlertStream(){
+  if(streamRunning)return; streamRunning=true;
+  const btn=document.getElementById('stream-btn');
+  btn.disabled=true; btn.textContent='⏳ Simulating...';
+  const stream=document.getElementById('alert-stream');
+  const ts=()=>{const d=new Date(); return `[${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}]`;};
+  const msgs=[
+    {ms:500,   cls:'al-warn', txt:' Poll #3 — PAGEIND risk score: 0.58 → approaching HIGH'},
+    {ms:1200,  cls:'al-warn', txt:' Sector avg risk +9.2% this cycle — monitoring'},
+    {ms:2000,  cls:'al-crit', txt:' ⚡ PAGEIND.NS breached HIGH (0.62) - FIRST BREACH'},
+    {ms:2200,  cls:'al-crit', txt:' → Dispatching alert email to 3 subscribers...'},
+    {ms:2600,  cls:'al-ok',   txt:' ✓ Email sent: critical alert (PAGEIND.NS 0.62)'},
+    {ms:3000,  cls:'al-tg',   txt:' 🤖 Telegram push sent to @RainLoomBot subscribers'},
+    {ms:3600,  cls:'al-crit', txt:' ⚡ Monsoon deficit −27% in Vidarbha → alert triggered'},
+    {ms:4000,  cls:'al-ok',   txt:' ✓ District alert dispatched · parametric payout check initiated'},
+    {ms:4600,  cls:'al-ok',   txt:' ✓ All alerts logged to event store. Next poll in 15 min.'},
+  ];
+  msgs.forEach(m=>{
+    setTimeout(()=>{
+      const d=document.createElement('div'); d.className=m.cls;
+      d.textContent=ts()+m.txt; stream.appendChild(d); stream.scrollTop=stream.scrollHeight;
+    },m.ms);
+  });
+  setTimeout(()=>{
+    btn.disabled=false; btn.textContent='↺ Replay Trigger';
+    streamRunning=false;
+  },5200);
+}
+
+/* ━━━ ML TAB 1: INGESTION ━━━ */
+const SOURCES=[
+  {id:'nasa',name:'NASA MODIS/GIBS',endpoint:'gibs.earthdata.nasa.gov',rows:83, unit:'district tiles',delay:0,  dur:2200},
+  {id:'noaa',name:'NOAA ENSO ONI', endpoint:'psl.noaa.gov/data/csv', rows:260,unit:'monthly records',delay:300,dur:900},
+  {id:'imd', name:'IMD/Open-Meteo',endpoint:'api.open-meteo.com/v1', rows:83, unit:'rainfall rows',  delay:600,dur:1800},
+  {id:'yf',  name:'yFinance NSE',  endpoint:'query1.finance.yahoo.com',rows:2080,unit:'OHLCV bars',  delay:900,dur:1400},
+];
+function runIngestion(){
+  const btn=document.getElementById('ingest-btn');
+  btn.disabled=true; btn.textContent='⏳ Running...';
+  document.getElementById('ingest-log').innerHTML='';
+  SOURCES.forEach(s=>{
+    ['src-'+s.id,'src-'+s.id+'-status','src-'+s.id+'-bar'].forEach((id,k)=>{
+      const el=document.getElementById(id);
+      if(k===0){el.className='source-card';}
+      else if(k===1){el.textContent='QUEUED';el.style.color='var(--t3)';}
+      else{el.style.width='0%';el.style.background='var(--cyan)';}
+    });
+  });
+  appendLog('ingest-log','[00:00] Pipeline started — fetching 4 sources in parallel','log-line-in');
+  SOURCES.forEach(s=>{
+    setTimeout(()=>{
+      document.getElementById('src-'+s.id).classList.add('fetching');
+      const st=document.getElementById('src-'+s.id+'-status');
+      st.textContent='FETCHING'; st.style.color='var(--cyan)';
+      appendLog('ingest-log',`[GET] ${s.endpoint} — ${s.rows} ${s.unit}`,'log-line-in');
+      const bar=document.getElementById('src-'+s.id+'-bar');
+      let pct=0; const iv=setInterval(()=>{pct+=100/40+(Math.random()-.5)*2; if(pct>=100){pct=100;clearInterval(iv);} bar.style.width=pct+'%';},s.dur/40);
+      setTimeout(()=>{
+        const card=document.getElementById('src-'+s.id);
+        card.classList.remove('fetching'); card.classList.add('done');
+        st.textContent=`✓ ${s.rows} rows`; st.style.color='var(--green)';
+        bar.style.width='100%'; bar.style.background='var(--green)';
+        appendLog('ingest-log',`[OK] ${s.name} → ${s.rows} ${s.unit} (${(s.dur/1000).toFixed(1)}s)`,'log-line-ok');
+      },s.dur);
+    },s.delay);
+  });
+  const total=Math.max(...SOURCES.map(s=>s.delay+s.dur));
+  setTimeout(()=>{
+    appendLog('ingest-log','[✓] All 4 sources complete — merging into DataFrame 2,506×47','log-line-ok');
+    appendLog('ingest-log','[✓] ADF stationarity check complete — auto-differenced where needed','log-line-ok');
+    appendLog('ingest-log','[✓] Dataset ready — handoff to Feature Engineering','log-line-ok');
+    btn.disabled=false; btn.textContent='↺ Re-run';
+  },total+300);
+}
+
+/* ━━━ ML TAB 2: FEATURES ━━━ */
+const FEATURES=[
+  {name:'Rainfall Deficit %', imp:.82,color:'var(--blue)', raw:'-27.4%', proc:'-0.82 (stdz)'},
+  {name:'Cotton Price Lag-4w',imp:.74,color:'var(--gold)', raw:'₹7,820', proc:'+18.3% chg'},
+  {name:'ENSO ONI Index',     imp:.68,color:'var(--cyan)', raw:'+1.2',   proc:'+1.2 (norm)'},
+  {name:'NDVI Vegetation',    imp:.61,color:'var(--green)',raw:'0.38',   proc:'Δ-0.11 4wk'},
+  {name:'Stock Momentum',     imp:.55,color:'var(--purple)',raw:'PAGEIND',proc:'β=-0.42'},
+  {name:'Drought Streak Wks', imp:.49,color:'var(--red)',  raw:'7 weeks',proc:'log(7)=1.9'},
+  {name:'IMD LPA Deviation',  imp:.43,color:'var(--blue)', raw:'-8.2mm', proc:'z=-1.3'},
+  {name:'GARCH Volatility σ²',imp:.38,color:'var(--t2)',   raw:'0.031',  proc:'0.031→σ²'},
+];
+function runFeatures(){
+  const btn=document.getElementById('feat-btn');
+  btn.disabled=true; btn.textContent='⏳ Processing...';
+  const c=document.getElementById('feat-rows');
+  c.innerHTML=`<div style="display:grid;grid-template-columns:155px 1fr 90px 90px 80px;gap:9px;margin-bottom:9px;font-size:.66rem;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.08em"><div>Feature</div><div>SHAP Importance</div><div>Raw</div><div>Processed</div><div>Status</div></div>`;
+  FEATURES.slice().sort((a,b)=>b.imp-a.imp).forEach((f,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:grid;grid-template-columns:155px 1fr 90px 90px 80px;gap:9px;align-items:center;margin-bottom:9px;';
+    row.innerHTML=`<div style="font-size:.77rem;font-weight:600;color:var(--t2)">${f.name}</div><div><div style="height:7px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden"><div id="fb${i}" style="height:100%;width:0%;background:${f.color};border-radius:3px;transition:width .9s ease"></div></div></div><div style="font-family:var(--mono);font-size:.7rem;color:var(--t3)">${f.raw}</div><div style="font-family:var(--mono);font-size:.7rem;color:var(--green)">${f.proc}</div><div id="fbd${i}" style="font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:100px;background:rgba(255,255,255,.04);color:var(--t3);text-align:center">PENDING</div>`;
+    c.appendChild(row);
+    setTimeout(()=>{
+      document.getElementById('fb'+i).style.width=(f.imp*100)+'%';
+      const b=document.getElementById('fbd'+i);
+      b.textContent='✓ READY'; b.style.background='rgba(16,185,129,.14)'; b.style.color='var(--green)';
+    },i*170+200);
+  });
+  setTimeout(()=>{btn.disabled=false;btn.textContent='↺ Re-process';},FEATURES.length*170+700);
+}
+
+/* ━━━ ML TAB 3: GARCH ━━━ */
+function buildGARCHChart(){
+  const chart=document.getElementById('garch-chart'); chart.innerHTML='';
+  const vals=Array.from({length:52},(_,i)=>{
+    return .015+(i>42?.055:0)+Math.random()*.024;
+  });
+  const max=Math.max(...vals);
+  vals.forEach(v=>{
+    const bar=document.createElement('div'); bar.className='garch-bar';
+    bar.style.height=(v/max*100)+'%';
+    bar.style.background=v>.04?'var(--red)':v>.022?'var(--gold)':'var(--green)';
+    chart.appendChild(bar);
+  });
+  return vals;
+}
+function runGARCH(){
+  const btn=document.getElementById('garch-btn'); btn.disabled=true; btn.textContent='⏳ Fitting...';
+  document.getElementById('garch-log').innerHTML='';
+  const vals=buildGARCHChart();
+  const lastVol=vals.slice(-4).reduce((a,b)=>a+b)/4;
+  const isVol=lastVol>.03;
+  [
+    {ms:300, txt:'[ADF] Returns stationarity test — p=0.002 ✓ stationary',cls:'log-line-ok'},
+    {ms:700, txt:'[MS-GARCH] Fitting 2-regime Markov-Switching on 52w returns...',cls:'log-line-in'},
+    {ms:1100,txt:'[EM] Expectation-Maximisation — iteration 1/12 · LL: -187.4',cls:'log-line-info'},
+    {ms:1500,txt:'[EM] Iteration 6/12 · LL: -163.2 (converging)',cls:'log-line-info'},
+    {ms:2000,txt:'[EM] Iteration 12/12 · CONVERGED · LL: -159.8',cls:'log-line-ok'},
+    {ms:2300,txt:'[REGIMES] Calm: σ²=0.014  |  Volatile: σ²=0.068',cls:'log-line-ok'},
+    {ms:2600,txt:`[FILTER] Current regime: ${isVol?'VOLATILE (P=0.74)':'CALM (P=0.81)'}`,cls:isVol?'log-line-warn':'log-line-ok'},
+  ].forEach(s=>setTimeout(()=>appendLog('garch-log',s.txt,s.cls),s.ms));
+  setTimeout(()=>{
+    const r=isVol?'VOLATILE':'CALM', p=isVol?'0.74':'0.81', v=(lastVol*100).toFixed(2)+'%';
+    const c=isVol?'var(--red)':'var(--green)';
+    document.getElementById('garch-regime').textContent=r; document.getElementById('garch-regime').style.color=c;
+    document.getElementById('garch-prob').textContent=p;   document.getElementById('garch-prob').style.color=c;
+    document.getElementById('garch-vol').textContent=v;    document.getElementById('garch-vol').style.color=isVol?'var(--gold)':'var(--t1)';
+    mlState.garch=isVol?.74:.26;
+    appendLog('garch-log',`[✓] GARCH score: ${mlState.garch.toFixed(2)} → ensemble ready`,'log-line-ok');
+    btn.disabled=false; btn.textContent='↺ Re-fit';
+  },2800);
+}
+
+/* ━━━ ML TAB 4: XGBOOST ━━━ */
+function buildSHAP(){
+  const shaps=[
+    {name:'Rainfall Deficit',val:.31,color:'var(--blue)'},{name:'ENSO ONI',val:.22,color:'var(--cyan)'},
+    {name:'Cotton Price Δ',val:.18,color:'var(--gold)'},{name:'NDVI Health',val:.14,color:'var(--green)'},
+    {name:'Momentum β',val:.09,color:'var(--purple)'},{name:'Drought Streak',val:.06,color:'var(--red)'},
+  ];
+  const el=document.getElementById('shap-bars'); el.innerHTML='';
+  shaps.forEach((s,i)=>{
+    const row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:7px;margin-bottom:7px';
+    row.innerHTML=`<div style="font-size:.68rem;color:var(--t2);min-width:100px">${s.name}</div><div style="flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div id="sb${i}" style="height:100%;width:0%;background:${s.color};border-radius:2px;transition:width .8s ease"></div></div><div style="font-family:var(--mono);font-size:.66rem;color:${s.color};min-width:28px">${(s.val*100).toFixed(0)}%</div>`;
+    el.appendChild(row);
+    setTimeout(()=>document.getElementById('sb'+i).style.width=(s.val*100)+'%',i*140+800);
+  });
+}
+function runXGB(){
+  const btn=document.getElementById('xgb-btn'); btn.disabled=true; btn.textContent='⏳ Inferring...';
+  document.getElementById('xgb-log').innerHTML='';
+  buildSHAP();
+  const score=.58+Math.random()*.24;
+  const cls=score>.8?'EXTREME':score>.6?'HIGH':'MODERATE';
+  const cc=score>.8?'var(--red)':score>.6?'var(--gold)':'var(--green)';
+  const ai=score>.6?0:score>.4?1:2;
+  [
+    {ms:200, txt:'[XGB] Loading 847 decision trees from checkpoint...',cls:'log-line-in'},
+    {ms:600, txt:'[XGB] Feature vector (47 dims) assembled → normalised',cls:'log-line-info'},
+    {ms:1000,txt:'[XGB] Root split: rainfall_deficit < -20%  →  YES branch',cls:'log-line-info'},
+    {ms:1300,txt:`[XGB] Traversed ${700+Math.floor(Math.random()*100)} trees — aggregating votes`,cls:'log-line-info'},
+    {ms:1700,txt:'[SHAP] TreeExplainer computing feature attributions...',cls:'log-line-in'},
+    {ms:2100,txt:`[✓] XGBoost score: ${score.toFixed(3)} → Class: ${cls}`,cls:'log-line-ok'},
+  ].forEach(s=>setTimeout(()=>appendLog('xgb-log',s.txt,s.cls),s.ms));
+  setTimeout(()=>{
+    document.getElementById('xgb-score').textContent=score.toFixed(2); document.getElementById('xgb-score').style.color=cc;
+    document.getElementById('xgb-class').textContent=cls; document.getElementById('xgb-class').style.color=cc;
+    document.getElementById('xgb-leaves').querySelectorAll('.xgb-node').forEach((n,i)=>{
+      n.style.opacity=i===ai?'1':'.3'; n.style.transform=i===ai?'scale(1.08)':'scale(1)';
+    });
+    mlState.xgb=score; btn.disabled=false; btn.textContent='↺ Re-run';
+  },2400);
+}
+
+/* ━━━ ML TAB 5: MLP ━━━ */
+const MLP_ARCH=[6,8,4,1]; let mlpNodes=[];
+function buildMLP(){
+  const net=document.getElementById('mlp-net'); net.innerHTML=''; mlpNodes=[];
+  const labels=['Input\n(6 feat)','Hidden 1\n(8)','Hidden 2\n(4)','Output'];
+  MLP_ARCH.forEach((count,li)=>{
+    if(li>0){const c=document.createElement('div');c.className='mlp-conn';net.appendChild(c);}
+    const layer=document.createElement('div'); layer.className='mlp-layer';
+    const ln=[];
+    for(let n=0;n<count;n++){
+      const node=document.createElement('div'); node.className='mlp-node';
+      node.style.borderColor='rgba(255,255,255,.1)'; node.style.background='rgba(0,0,0,.4)';
+      layer.appendChild(node); ln.push(node);
+    }
+    const lbl=document.createElement('div'); lbl.className='mlp-layer-label';
+    lbl.textContent=labels[li]; layer.appendChild(lbl);
+    net.appendChild(layer); mlpNodes.push(ln);
+  });
+}
+function drawMLPWindow(){
+  const canvas=document.getElementById('mlp-window'); if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const dpr=devicePixelRatio||1; canvas.width=canvas.offsetWidth*dpr; canvas.height=96*dpr;
+  ctx.scale(dpr,dpr); const W=canvas.offsetWidth,H=96;
+  ctx.clearRect(0,0,W,H);
+  const data=Array.from({length:12},(_,i)=>.3+.5*Math.sin(i*.5+1)+Math.random()*.13);
+  const mx=Math.max(...data),mn=Math.min(...data);
+  ctx.strokeStyle='rgba(59,130,246,.65)'; ctx.lineWidth=2; ctx.beginPath();
+  data.forEach((v,i)=>{const x=(i/11)*(W-20)+10,y=H-10-((v-mn)/(mx-mn))*(H-20); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.stroke();
+  ctx.fillStyle='rgba(59,130,246,.07)';
+  ctx.lineTo(W-10,H-10); ctx.lineTo(10,H-10); ctx.closePath(); ctx.fill();
+  data.forEach((v,i)=>{const x=(i/11)*(W-20)+10,y=H-10-((v-mn)/(mx-mn))*(H-20); ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='var(--blue)';ctx.fill();});
+}
+function runMLP(){
+  const btn=document.getElementById('mlp-btn'); btn.disabled=true; btn.textContent='⏳ Forward pass...';
+  document.getElementById('mlp-log').innerHTML='';
+  drawMLPWindow();
+  const score=.45+Math.random()*.35;
+  const trend=score>.65?'📈 RISING RISK':score>.45?'⚡ BUILDING':'✅ STABLE';
+  const tc=score>.65?'var(--red)':score>.45?'var(--gold)':'var(--green)';
+  [
+    {ms:200, txt:'[MLP] Assembling 12-week sliding window (6 features × 12 steps)...',cls:'log-line-in'},
+    {ms:600, txt:'[L1] Linear(72→8) + ReLU — forward pass',cls:'log-line-info'},
+    {ms:950, txt:'[L2] Linear(8→4) + ReLU — hidden representations',cls:'log-line-info'},
+    {ms:1300,txt:'[L3] Linear(4→1) + Sigmoid — output bounded [0,1]',cls:'log-line-info'},
+    {ms:1700,txt:`[✓] MLP output: ${score.toFixed(3)} — trend: ${trend}`,cls:'log-line-ok'},
+  ].forEach(s=>setTimeout(()=>appendLog('mlp-log',s.txt,s.cls),s.ms));
+  mlpNodes.forEach((layer,li)=>{
+    setTimeout(()=>{layer.forEach(node=>{
+      const int=.3+Math.random()*.7;
+      node.style.background=`rgba(59,130,${Math.floor(200*int)},${int})`;
+      node.style.borderColor='var(--blue)';
+      node.style.boxShadow=`0 0 ${Math.floor(int*9)}px rgba(59,130,246,.5)`;
+    });},li*350+400);
+  });
+  setTimeout(()=>{
+    document.getElementById('mlp-score').textContent=score.toFixed(2); document.getElementById('mlp-score').style.color=tc;
+    document.getElementById('mlp-trend').textContent=trend; document.getElementById('mlp-trend').style.color=tc;
+    mlState.mlp=score; btn.disabled=false; btn.textContent='↺ Re-run';
+  },2100);
+}
+
+/* ━━━ ML TAB 6: ENSEMBLE ━━━ */
+function runEnsemble(){
+  const btn=document.getElementById('ens-btn'); btn.disabled=true; btn.textContent='⏳ Combining...';
+  document.getElementById('ens-log').innerHTML='';
+  const g=mlState.garch??(.45+Math.random()*.3);
+  const x=mlState.xgb??(.50+Math.random()*.3);
+  const m=mlState.mlp??(.40+Math.random()*.35);
+  const final=.35*g+.40*x+.25*m;
+  if(!mlState.garch||!mlState.xgb||!mlState.mlp)
+    appendLog('ens-log','[WARN] Some models not run — using estimates. Run tabs 3→4→5 first for real values.','log-line-warn');
+  setTimeout(()=>{
+    document.getElementById('ens-garch').textContent=g.toFixed(2);
+    document.getElementById('ens-xgb').textContent=x.toFixed(2);
+    document.getElementById('ens-mlp').textContent=m.toFixed(2);
+  },300);
+  [
+    {ms:300, txt:`[GARCH]   ${g.toFixed(3)} × 0.35 = ${(g*.35).toFixed(3)}`,cls:'log-line-in'},
+    {ms:600, txt:`[XGBoost] ${x.toFixed(3)} × 0.40 = ${(x*.40).toFixed(3)}`,cls:'log-line-in'},
+    {ms:900, txt:`[MLP]     ${m.toFixed(3)} × 0.25 = ${(m*.25).toFixed(3)}`,cls:'log-line-in'},
+    {ms:1200,txt:`[ENSEMBLE] = ${final.toFixed(3)}  ( ${(final*100).toFixed(1)}% risk )`,cls:'log-line-ok'},
+  ].forEach(s=>setTimeout(()=>appendLog('ens-log',s.txt,s.cls),s.ms));
+  setTimeout(()=>{
+    const color=final>.8?'var(--red)':final>.6?'var(--gold)':final>.4?'#f59e0b':'var(--green)';
+    const label=final>.8?'EXTREME RISK':final>.6?'HIGH RISK':final>.4?'MODERATE':'LOW RISK';
+    const bg=final>.8?'rgba(239,68,68,.2)':final>.6?'rgba(245,158,11,.15)':final>.4?'rgba(245,158,11,.1)':'rgba(16,185,129,.15)';
+    document.getElementById('ens-final').textContent=(final*100).toFixed(1)+'%';
+    document.getElementById('ens-final').style.color=color;
+    const badge=document.getElementById('ens-badge');
+    badge.textContent=label; badge.style.background=bg; badge.style.color=color;
+    document.getElementById('ens-contrib-g').textContent=(g*.35).toFixed(3);
+    document.getElementById('ens-contrib-x').textContent=(x*.40).toFixed(3);
+    document.getElementById('ens-contrib-m').textContent=(m*.25).toFixed(3);
+    document.getElementById('ens-formula').textContent=
+      `${final.toFixed(3)} = 0.35×${g.toFixed(2)} + 0.40×${x.toFixed(2)} + 0.25×${m.toFixed(2)}`;
+    appendLog('ens-log',`[✓] Score ${(final*100).toFixed(1)}% routed → gauges · alerts · payout · dashboard`,'log-line-ok');
+    btn.disabled=false; btn.textContent='↺ Re-combine';
+  },1600);
+}
+
+/* ━━ Scroll reveal ━━ */
+const ro=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+/* ━━ Init ━━ */
+buildGauges();
+buildGARCHChart();
+buildMLP();
+drawMLPWindow();
+replayPayout();
+</script>
+</body>
+</html>

@@ -1083,39 +1083,66 @@ _guide_pages = [
         ),
         "usage": "Use this to measure if the risk signal has real economic value.",
     },
+    {
+        "num": "07",
+        "icon": "\ud83d\uddfa\ufe0f",
+        "icon_bg": "linear-gradient(135deg, #0f2f2f 0%, #081a1a 100%)",
+        "accent": "#06b6d4",
+        "title": "Geospatial Nowcast",
+        "desc": (
+            "Visualises risk across 83 Indian cotton-belt districts with NASA satellite "
+            "overlays. NDVI vegetation health metrics are updated daily from MODIS "
+            "data, providing ground-truth validation for meteorological rainfall "
+            "deficits."
+        ),
+        "usage": "Use this to identify exactly WHERE the drought impact is most severe.",
+    },
+    {
+        "num": "08",
+        "icon": "\ud83c\udfe2",
+        "icon_bg": "linear-gradient(135deg, #2a0f25 0%, #1a0818 100%)",
+        "accent": "#ec4899",
+        "title": "Institutional API",
+        "desc": (
+            "A B2B portal for institutional subscribers to generate API keys, "
+            "configure webhooks for custom thresholds, and integrate RainLoom's "
+            "causal risk signals directly into internal enterprise risk management "
+            "systems."
+        ),
+        "usage": "Use this to integrate RainLoom data into your own applications.",
+    },
+    {
+        "num": "09",
+        "icon": "\u23f1\ufe0f",
+        "icon_bg": "linear-gradient(135deg, #3a0f0f 0%, #200808 100%)",
+        "accent": "#ef4444",
+        "title": "Live Demo Simulation",
+        "desc": (
+            "A high-fidelity time-machine simulation of the severe 2009 drought. "
+            "Step through week-by-week to see how the risk signal detonates "
+            "weeks before the actual market crash, proving the system's lead-time "
+            "advantage."
+        ),
+        "usage": "Use this to experience the predictive power of the model first-hand.",
+    },
 ]
 
-# Render guide cards using st.columns to avoid deep nesting
-_row1_pages = _guide_pages[:3]
-_row2_pages = _guide_pages[3:]
-
-_g_cols1 = st.columns(len(_row1_pages))
-for col, p in zip(_g_cols1, _row1_pages):
-    with col:
-        st.markdown(
-            f'<div class="guide-card" style="border-top: 2px solid {p["accent"]};">'
-            f'<div class="guide-card-icon" style="background: {p["icon_bg"]}; color: {p["accent"]};">{p["icon"]}</div>'
-            f'<div class="guide-card-page" style="color: {p["accent"]};">Page {p["num"]}</div>'
-            f'<div class="guide-card-title">{p["title"]}</div>'
-            f'<div class="guide-card-desc">{p["desc"]}</div>'
-            f'<div class="guide-card-usage">{p["usage"]}</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-
-_g_cols2 = st.columns(len(_row2_pages))
-for col, p in zip(_g_cols2, _row2_pages):
-    with col:
-        st.markdown(
-            f'<div class="guide-card" style="border-top: 2px solid {p["accent"]};">'
-            f'<div class="guide-card-icon" style="background: {p["icon_bg"]}; color: {p["accent"]};">{p["icon"]}</div>'
-            f'<div class="guide-card-page" style="color: {p["accent"]};">Page {p["num"]}</div>'
-            f'<div class="guide-card-title">{p["title"]}</div>'
-            f'<div class="guide-card-desc">{p["desc"]}</div>'
-            f'<div class="guide-card-usage">{p["usage"]}</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
+# Render guide cards using st.columns in rows of 3
+for i in range(0, len(_guide_pages), 3):
+    chunk = _guide_pages[i:i + 3]
+    cols = st.columns(len(chunk))
+    for col, p in zip(cols, chunk):
+        with col:
+            st.markdown(
+                f'<div class="guide-card" style="border-top: 2px solid {p["accent"]};">'
+                f'<div class="guide-card-icon" style="background: {p["icon_bg"]}; color: {p["accent"]};">{p["icon"]}</div>'
+                f'<div class="guide-card-page" style="color: {p["accent"]};">Page {p["num"]}</div>'
+                f'<div class="guide-card-title">{p["title"]}</div>'
+                f'<div class="guide-card-desc">{p["desc"]}</div>'
+                f'<div class="guide-card-usage">{p["usage"]}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
 
 st.markdown('<div class="gradient-divider"></div>', unsafe_allow_html=True)
 

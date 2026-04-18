@@ -419,6 +419,8 @@ if _selected_ticker and _selected_ticker in _stock_data and _selected_ticker in 
 
         st.plotly_chart(fig, use_container_width=True, key="hedging_pnl")
 
+        st.info("💡 **Graph Explanation:** This chart compares two portfolio strategies over time. The dotted line is 'Buy & Hold'. The solid green line is the 'Hedged Strategy', where protective actions are taken whenever the AI's risk score (blue wave at bottom) crosses the red threshold. The red shaded vertical bands show exactly *when* the AI triggered the hedge.")
+
         # ═══════════════════════════════════════════════════════════════
         # Drought Year Analysis
         # ═══════════════════════════════════════════════════════════════
@@ -463,6 +465,8 @@ if _selected_ticker and _selected_ticker in _stock_data and _selected_ticker in 
             )
 
             st.plotly_chart(fig_drought, use_container_width=True, key="drought_bars")
+
+            st.info("💡 **Graph Explanation:** This bar chart isolates performance specifically during known drought years. It contrasts the financial return of an unhedged portfolio (red) against one protected by the AI's signals (green). A taller green bar proves the model successfully mitigated losses during a climate crisis.")
 
             # Value saved table
             st.markdown("**Value Protected During Drought Events**")

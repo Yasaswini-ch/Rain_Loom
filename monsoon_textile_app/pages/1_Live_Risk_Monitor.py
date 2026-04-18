@@ -409,13 +409,25 @@ if fetch_btn and custom_ticker:
         import yfinance as yf
 
         with st.spinner(f"Fetching {custom_ticker} from Yahoo Finance..."):
-            df_live = yf.download(custom_ticker, period=lookup_period, auto_adjust=True, progress=False)
+            ticker_clean = custom_ticker.strip().upper()
+            if not ticker_clean.endswith(".NS") and not ticker_clean.endswith(".BO") and "^" not in ticker_clean:
+                ticker_clean += ".NS"
+            
+            df_live = yf.download(ticker_clean, period=lookup_period, auto_adjust=True, progress=False)
 
         if df_live.empty:
-            st.error(f"No data returned for {custom_ticker}. Check the ticker symbol.")
+            st.error(f"No data returned for {ticker_clean}. Check the ticker symbol.")
         else:
             if isinstance(df_live.columns, pd.MultiIndex):
                 df_live.columns = df_live.columns.get_level_values(0)
+            
+            # ── Data Cleaning/Sanity ──
+            # Drop the last row if it contains NaN Close (happens during off-hours/flaky API)
+            df_live = df_live.dropna(subset=["Close"])
+            
+            if df_live.empty:
+                st.error("Data fetched but all records were incomplete (NaN). Try a longer period.")
+                st.stop()
 
             # Compute features
             df_live["Log Return"] = np.log(df_live["Close"] / df_live["Close"].shift(1))
@@ -480,7 +492,7 @@ if fetch_btn and custom_ticker:
             st.markdown(
                 f'<div style="display:flex; align-items:center; gap:16px; margin-bottom:12px;">'
                 f'<div style="font-size:1.3rem; font-weight:700; color:#e2e8f0;">'
-                f'{custom_ticker.replace(".NS","")}</div>'
+                f'{ticker_clean}</div>'
                 f'<div style="background:{risk_color}22; color:{risk_color}; '
                 f'padding:4px 14px; border-radius:6px; font-weight:700; font-size:0.92rem; '
                 f'border:1px solid {risk_color}44;">'
@@ -582,6 +594,8 @@ if fetch_btn and custom_ticker:
             fig_custom.update_yaxes(showgrid=False)
             fig_custom.update_xaxes(showgrid=True, gridcolor="rgba(255,255,255,0.04)")
             st.plotly_chart(fig_custom, use_container_width=True, key="custom_lookup")
+
+            st.info("💡 **Graph Explanation:** The top panel tracks the stock's closing price. The middle panel plots the 20-day realized volatility, alerting you to sudden spikes in price fluctuation. The bottom panel displays daily trading volume. Shaded purple areas mark the core monsoon months (June to September), allowing you to visually intercept how delayed rains coincide with market turbulence.")
 
             # Actionable insights
             st.markdown(
@@ -818,6 +832,8 @@ with left_col:
     )
 
     st.plotly_chart(fig_rain, use_container_width=True, key="rainfall")
+    
+    st.info("💡 **Graph Explanation:** This chart displays the cumulative rainfall deficit for key cotton-producing states. Bars pointing left indicate below-normal rainfall. The vertical red dashed line marks the -20% 'Severe' threshold point, beyond which crop yields are heavily impacted. Red bars highlight states facing critical drought stress.")
 
     st.caption(
         "Gujarat and Rajasthan are India's largest cotton producers. When monsoon deficit "
@@ -914,6 +930,8 @@ with right_col:
     )
 
     st.plotly_chart(fig_cotton, use_container_width=True, key="cotton")
+
+    st.info("💡 **Graph Explanation:** The blue line tracks MCX Cotton Futures prices, while the red line tracks the ML model's computed probability of entering a 'High Volatility' regime. The background is shaded red when this probability is elevated, serving as a visual early warning system indicating when the market expects severe cotton supply shocks.")
 
 
 # =====================================================================
@@ -1027,6 +1045,8 @@ fig_risk.update_layout(
 
 st.plotly_chart(fig_risk, use_container_width=True, key="risk_evolution")
 
+st.info("💡 **Graph Explanation:** This graph shows the historical evolution of the Ensemble Risk Score for tracked textile companies. Background color bands define risk severity: green (Low) up to red (Extreme). When a stock's risk line enters the orange or red zones, it historically precedes major volatility spikes related to raw material cost surges.")
+
 st.caption(
     "The risk zones are calibrated against historical drought events (2009, 2014, 2015, 2023). "
     "When scores cross into HIGH territory, the model has historically provided 8+ weeks of "
@@ -1108,6 +1128,8 @@ with fc1:
         yaxis=dict(range=[0, 1.0], showgrid=True, gridcolor="rgba(255,255,255,0.04)"),
     )
     st.plotly_chart(fig_fwd, use_container_width=True, key="forward_prediction")
+    
+    st.info("💡 **Graph Explanation:** This 'Fan Chart' projects the expected trajectory of the sector's risk score over the next 8 weeks. The dotted blue line shows the average forecast, while the shaded blue area represents the 95% confidence interval. As projections look further into the future, the 'fan' widens to reflect increasing uncertainty.")
 
 with fc2:
     st.markdown(
