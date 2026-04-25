@@ -1085,7 +1085,7 @@ _guide_pages = [
     },
     {
         "num": "07",
-        "icon": "\ud83d\uddfa\ufe0f",
+        "icon": "&#128506;",
         "icon_bg": "linear-gradient(135deg, #0f2f2f 0%, #081a1a 100%)",
         "accent": "#06b6d4",
         "title": "Geospatial Nowcast",
@@ -1099,7 +1099,7 @@ _guide_pages = [
     },
     {
         "num": "08",
-        "icon": "\ud83c\udfe2",
+        "icon": "&#127970;",
         "icon_bg": "linear-gradient(135deg, #2a0f25 0%, #1a0818 100%)",
         "accent": "#ec4899",
         "title": "Institutional API",
