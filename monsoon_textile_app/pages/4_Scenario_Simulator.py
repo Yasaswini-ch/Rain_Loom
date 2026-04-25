@@ -1,4 +1,4 @@
-﻿"""
+"""
 Page 4 — Scenario Simulator
 ==============================
 Event-grade interactive what-if analysis: adjust monsoon, cotton-price,
@@ -1208,8 +1208,9 @@ fig_rank = go.Figure(go.Bar(
 for _tx, _tc in [(0.30, ACCENT_GREEN), (0.55, ACCENT_AMBER), (0.75, "#f97316")]:
     fig_rank.add_shape(type="line", x0=_tx, x1=_tx, y0=0, y1=1,
                        xref="x", yref="paper", line=dict(color=_tc, width=1, dash="dot"))
+fig_rank.update_layout(**PLOTLY_LAYOUT_DEFAULTS)
 fig_rank.update_layout(
-    **PLOTLY_LAYOUT_DEFAULTS, height=340,
+    height=340,
     xaxis=dict(title="Predicted Risk Score", tickformat=".0%", range=[0, 1.15],
                showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
     yaxis=dict(autorange="reversed", showgrid=False),
