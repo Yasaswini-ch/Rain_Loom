@@ -1235,13 +1235,21 @@ for _thresh, _lbl, _clr in [(0.3, "LOW/MOD", ACCENT_GREEN),
                        annotation_position="right",
                        annotation_font=dict(size=11, color=_clr))
 
-# Mark target date
-fig_traj.add_vline(
-    x=target_date.strftime("%d %b"),
-    line_dash="dash", line_color=ACCENT_BLUE, line_width=2,
-    annotation_text=f"Target: {target_date.strftime('%d %b')}",
-    annotation_font=dict(size=12, color=ACCENT_BLUE),
-    annotation_position="top right",
+# Mark target date -- add_vline breaks on categorical x-axes in Plotly 6.x,
+# use add_shape + add_annotation with integer index instead.
+_target_lbl = target_date.strftime("%d %b")
+_vline_x = _x_labels.index(_target_lbl) if _target_lbl in _x_labels else len(_x_labels) - 1
+fig_traj.add_shape(
+    type="line", x0=_vline_x, x1=_vline_x, y0=0, y1=1,
+    xref="x", yref="paper",
+    line=dict(color=ACCENT_BLUE, width=2, dash="dash"),
+)
+fig_traj.add_annotation(
+    x=_vline_x, y=1.02, xref="x", yref="paper",
+    text=f"Target: {_target_lbl}", showarrow=False,
+    font=dict(size=12, color=ACCENT_BLUE), xanchor="center",
+    bgcolor="rgba(15,23,42,0.8)", bordercolor=ACCENT_BLUE,
+    borderwidth=1, borderpad=4,
 )
 
 fig_traj.update_layout(
