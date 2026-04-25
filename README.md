@@ -1,12 +1,12 @@
-# RainLoom: Enterprise Climate Risk & Volatility Platform
-[![Platform Login](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://rainloomtextiles.streamlit.app)
+# RainLoom: Risk Intelligence Platform for the Textile Value Chain
+[![SaaS Terminal](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://rainloomtextiles.streamlit.app)
 [![API Gateway](https://img.shields.io/badge/API-Enterprise_Gateway-blue?logo=fastapi)](https://rainloom.vercel.app/)
 ![IV F-Stat](https://img.shields.io/badge/Causal_Confidence-IV_F--Stat_5.8-brightgreen)
 ![Geo-Resolution](https://img.shields.io/badge/Resolution-District--Level_GIS-orange)
 
-### Actionable Climate Intelligence for the Textile Value Chain
+### Actionable Climate Telemetry for Institutional Risk Management
 
-**RainLoom** is an enterprise-grade predictive risk platform designed for CFOs, supply chain directors, and institutional investors in the textile sector. By bridging macroeconomic climate telemetry with financial market modeling, RainLoom enables enterprises to preemptively hedge against supply chain shocks caused by monsoon failures and extreme weather events.
+**RainLoom** is an enterprise-grade **Risk Intelligence Platform** designed for CFOs, supply chain directors, and institutional fund managers in the textile sector. By bridging macroeconomic climate telemetry with financial market modeling, RainLoom acts as a predictive **SaaS Terminal**, enabling enterprises to preemptively hedge against supply chain shocks caused by monsoon failures and extreme weather events.
 
 ---
 
@@ -20,7 +20,7 @@ Protect margins by predicting raw material shortfalls before they hit the commod
 ### 2. Institutional Hedging & Capital Markets
 Quantify and hedge physical climate exposure in public equities.
 *   **Causal AI Volatility Engine:** Moving beyond simple correlations, our engine leverages Instrumental Variable (IV) analysis (using ENSO/ONI data) and Granger Causality to cleanly isolate the impact of weather on specific stock volatility.
-*   **Forward Portfolio Profiling:** Generate dynamic BUY/HOLD/REDUCE/AVOID signals based on a company's position in the textile value chain (upstream vs. downstream) and its structural cotton dependency.
+*   **Forward Portfolio Profiling:** Generate dynamic BUY/HOLD/REDUCE/AVOID signals based on a company's position in the textile value chain and forecast future **Regime Trajectories** of volatility.
 
 ### 3. Parametric Insurance & ESG Compliance
 Automate intervention and meet sustainability (ESG) mandates seamlessly.
