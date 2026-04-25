@@ -574,14 +574,14 @@ with ctrl_col3:
     basemap = st.selectbox(
         "🗺️ Basemap",
         options=[
-            "CartoDB Dark Matter",
             "OpenStreetMap",
+            "CartoDB Dark Matter",
             "CartoDB Positron",
             "ESRI Satellite",
             "ESRI Topo",
             "Stamen Terrain",
         ],
-        index=0,
+        index=0,  # OpenStreetMap is default — CartoDB tiles blocked by Streamlit Cloud CSP
         key="geo_basemap",
     )
 
@@ -765,6 +765,19 @@ if not _filtered.empty:
 
     # Render map as raw HTML — bypasses st_folium JSON serialization entirely
     map_html = m._repr_html_()
+
+    # Inject a permissive Content-Security-Policy meta tag so tile servers
+    # (CartoDB, ESRI, Stamen, OSM) can load inside Streamlit's sandboxed iframe.
+    csp_meta = (
+        '<meta http-equiv="Content-Security-Policy" content="'
+        "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
+        "img-src * data: blob:; "
+        "connect-src *; "
+        "font-src * data:;"
+        '">'
+    )
+    map_html = map_html.replace("<head>", f"<head>{csp_meta}", 1)
+
     components.html(map_html, height=map_height + 20, scrolling=False)
 
     st.info("💡 **GIS Map:** Polygon fills show 30-day rainfall departure per district. Click any polygon for a detailed popup. Use the **⊞ Layer Control** (top-right) to toggle layers and switch basemaps.")
