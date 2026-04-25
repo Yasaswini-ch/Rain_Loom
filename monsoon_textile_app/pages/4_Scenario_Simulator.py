@@ -1036,7 +1036,258 @@ if total_value > 0:
         </div>
         """, unsafe_allow_html=True)
 
+
+# ═══════════════════════════════════════════════════════════════════════════
+# FORWARD DATE PREDICTOR
+# ═══════════════════════════════════════════════════════════════════════════
+st.markdown(f"""
+<div style="margin-top:3rem; padding-bottom:0.55rem;
+            border-bottom:2px solid transparent;
+            border-image:linear-gradient(90deg,{ACCENT_BLUE},{ACCENT_GREEN},transparent) 1;">
+    <div style="font-size:1.41rem;font-weight:600;letter-spacing:0.04em;
+                text-transform:uppercase;color:{TEXT_PRIMARY};">
+        &#128200; Forward Date Predictor
+    </div>
+    <div style="font-size:0.97rem;color:{TEXT_MUTED};margin-top:0.2rem;">
+        Enter expected climate &amp; market conditions for a future date &mdash;
+        get stock-level risk predictions for that specific point in time
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("<div style='height:1rem;'></div>", unsafe_allow_html=True)
+
+# ── Date + inputs ──────────────────────────────────────────────────────────
+import datetime as _dt
+_today = _dt.date.today()
+_max_date = _today + _dt.timedelta(days=365)
+
+fd_col1, fd_col2, fd_col3, fd_col4, fd_col5 = st.columns([2, 1, 1, 1, 1])
+
+with fd_col1:
+    target_date = st.date_input(
+        "&#128197; Target Forecast Date",
+        value=_today + _dt.timedelta(weeks=8),
+        min_value=_today + _dt.timedelta(days=1),
+        max_value=_max_date,
+        key="fd_date",
+        help="Pick any date up to 12 months ahead. The model projects conditions on that date.",
+    )
+
+with fd_col2:
+    fd_deficit = st.number_input(
+        "Monsoon Deficit (%)",
+        min_value=-50, max_value=20, value=-20, step=1,
+        key="fd_deficit",
+        help="Expected JJAS rainfall departure from Long Period Average on the target date.",
+    )
+
+with fd_col3:
+    fd_cotton = st.number_input(
+        "Cotton Price Change (%)",
+        min_value=-30, max_value=50, value=15, step=1,
+        key="fd_cotton",
+        help="Expected 30-day MCX cotton futures change by that date.",
+    )
+
+with fd_col4:
+    fd_vix = st.number_input(
+        "India VIX Level",
+        min_value=8.0, max_value=40.0, value=18.0, step=0.5,
+        key="fd_vix",
+        help="Expected India VIX on the target date.",
+    )
+
+with fd_col5:
+    fd_breadth = st.number_input(
+        "Spatial Breadth (%)",
+        min_value=0, max_value=100, value=50, step=5,
+        key="fd_breadth",
+        help="Expected % of cotton-belt districts with deficit > 20%.",
+    )
+
+# ── Compute predictions ────────────────────────────────────────────────────
+_weeks_ahead = max(1, (_dt.date.fromisoformat(str(target_date)) - _today).days // 7)
+_target_month = _dt.date.fromisoformat(str(target_date)).month
+_is_jjas = _target_month in (6, 7, 8, 9)
+
+st.markdown(f"""
+<div style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);
+            border-left:4px solid {ACCENT_BLUE};border-radius:10px;
+            padding:0.7rem 1.2rem;margin:0.8rem 0 1.2rem 0;
+            font-size:0.92rem;color:{TEXT_MUTED};">
+    &#128337;&nbsp;
+    <b style="color:{TEXT_PRIMARY};">Forecasting {_weeks_ahead} week(s) ahead</b> &mdash;
+    Target: <b style="color:{ACCENT_BLUE};">{target_date.strftime('%d %b %Y')}</b>
+    {'&nbsp; <span style="background:rgba(16,185,129,0.15);color:#10b981;padding:2px 8px;border-radius:10px;font-size:0.85rem;font-weight:600;">&#127808; JJAS Monsoon Season</span>' if _is_jjas else
+     '&nbsp; <span style="background:rgba(148,163,184,0.12);color:#94a3b8;padding:2px 8px;border-radius:10px;font-size:0.85rem;">Pre/Post-Monsoon</span>'}
+</div>
+""", unsafe_allow_html=True)
+
+# ── Risk cards for each stock ──────────────────────────────────────────────
+st.markdown(f'<div style="font-size:1.05rem;font-weight:600;color:{TEXT_PRIMARY};'
+            f'margin-bottom:0.6rem;">Predicted Risk on {target_date.strftime("%d %b %Y")}</div>',
+            unsafe_allow_html=True)
+
+_fd_results = {}
+_fd_items = list(STOCKS.items())
+for _row_start in range(0, len(_fd_items), 4):
+    _row_items = _fd_items[_row_start:_row_start + 4]
+    _cols = st.columns(len(_row_items), gap="medium")
+    for _col, (_name, _info) in zip(_cols, _row_items):
+        _r = compute_scenario_risk(_info, _name, fd_deficit, fd_cotton, fd_vix, fd_breadth)
+        _fd_results[_name] = _r["risk"]
+        _risk = _r["risk"]
+        if _risk < 0.3:
+            _color, _label = ACCENT_GREEN, "LOW"
+        elif _risk < 0.6:
+            _color, _label = ACCENT_AMBER, "MODERATE"
+        elif _risk < 0.8:
+            _color, _label = "#f97316", "HIGH"
+        else:
+            _color, _label = ACCENT_RED, "EXTREME"
+        with _col:
+            st.markdown(f"""
+            <div style="background:{BG_CARD};border:1px solid {GLASS_BORDER};
+                        border-top:4px solid {_color};border-radius:12px;
+                        padding:1rem;text-align:center;">
+                <div style="font-size:0.9rem;font-weight:600;color:{TEXT_PRIMARY};
+                            margin-bottom:2px;">{_name}</div>
+                <div style="font-size:0.78rem;color:{TEXT_MUTED};margin-bottom:8px;">
+                    {_info['chain']} &middot; dep {_info['dep']:.0%}</div>
+                <div style="font-size:2.2rem;font-weight:700;color:{_color};
+                            text-shadow:0 0 18px {_color}66;">{_risk:.0%}</div>
+                <div style="font-size:0.82rem;font-weight:700;letter-spacing:0.08em;
+                            color:{_color};margin-top:2px;">{_label}</div>
+                <div style="font-size:0.75rem;color:{TEXT_MUTED};margin-top:8px;">
+                    CI: {_r['ci_low']:.0%} &ndash; {_r['ci_high']:.0%}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+# ── Week-by-week trajectory fan chart ────────────────────────────────────
+st.markdown(f'<div style="font-size:1.05rem;font-weight:600;color:{TEXT_PRIMARY};'
+            f'margin:1.4rem 0 0.6rem 0;">Risk Trajectory: Today &#8594; {target_date.strftime("%d %b %Y")}</div>',
+            unsafe_allow_html=True)
+
+_n_steps = min(_weeks_ahead, 24)
+_step_weeks = [0] + [round(i * _weeks_ahead / _n_steps) for i in range(1, _n_steps + 1)]
+_step_dates = [_today + _dt.timedelta(weeks=w) for w in _step_weeks]
+
+# Current (baseline) conditions from the scenario sliders
+_base_deficit  = st.session_state.get("sc_deficit",  -15)
+_base_cotton   = st.session_state.get("sc_cotton",    10)
+_base_vix      = st.session_state.get("sc_vix",       16.0)
+_base_breadth  = st.session_state.get("sc_breadth",   40)
+
+fig_traj = go.Figure()
+
+for _name, _info in STOCKS.items():
+    _color = _info.get("color", ACCENT_BLUE)
+    _traj, _lo, _hi = [], [], []
+    for _i, _w in enumerate(_step_weeks):
+        _frac = _i / max(_n_steps, 1)
+        # Linearly interpolate from current scenario → target date conditions
+        _d = _base_deficit + (_frac * (fd_deficit - _base_deficit))
+        _c = _base_cotton  + (_frac * (fd_cotton  - _base_cotton))
+        _v = _base_vix     + (_frac * (fd_vix     - _base_vix))
+        _b = _base_breadth + (_frac * (fd_breadth - _base_breadth))
+        _pr = compute_scenario_risk(_info, _name, _d, _c, _v, _b)
+        _traj.append(_pr["risk"])
+        _lo.append(_pr["ci_low"])
+        _hi.append(_pr["ci_high"])
+
+    _x_labels = [d.strftime("%d %b") for d in _step_dates]
+
+    # Confidence band
+    fig_traj.add_trace(go.Scatter(
+        x=_x_labels + _x_labels[::-1],
+        y=_hi + _lo[::-1],
+        fill="toself",
+        fillcolor=f"{_color}18",
+        line=dict(width=0),
+        showlegend=False,
+        hoverinfo="skip",
+    ))
+    # Main line
+    fig_traj.add_trace(go.Scatter(
+        x=_x_labels, y=_traj,
+        mode="lines",
+        name=_name,
+        line=dict(color=_color, width=2.5),
+        hovertemplate=f"<b>{_name}</b><br>Week: %{{x}}<br>Risk: %{{y:.1%}}<extra></extra>",
+    ))
+
+# Threshold bands
+for _thresh, _lbl, _clr in [(0.3, "LOW/MOD", ACCENT_GREEN),
+                              (0.6, "MOD/HIGH", ACCENT_AMBER),
+                              (0.8, "HIGH/EXT", ACCENT_RED)]:
+    fig_traj.add_hline(y=_thresh, line_dash="dot", line_color=_clr, line_width=1,
+                       annotation_text=_lbl,
+                       annotation_position="right",
+                       annotation_font=dict(size=11, color=_clr))
+
+# Mark target date
+fig_traj.add_vline(
+    x=target_date.strftime("%d %b"),
+    line_dash="dash", line_color=ACCENT_BLUE, line_width=2,
+    annotation_text=f"Target: {target_date.strftime('%d %b')}",
+    annotation_font=dict(size=12, color=ACCENT_BLUE),
+    annotation_position="top right",
+)
+
+fig_traj.update_layout(
+    **PLOTLY_LAYOUT_DEFAULTS,
+    height=460,
+    title=dict(text="Week-by-Week Risk Trajectory", font=dict(size=15, color=TEXT_PRIMARY)),
+    yaxis=dict(title="Predicted Risk Score", tickformat=".0%", range=[0, 1.05], showgrid=False),
+    xaxis=dict(title="Date", showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5,
+                bgcolor="rgba(0,0,0,0)", font=dict(size=12)),
+)
+st.plotly_chart(fig_traj, use_container_width=True, key="fd_trajectory")
+
+st.info(
+    "&#128161; **How to read this:** The lines show how each stock's predicted risk evolves "
+    f"week by week from today to **{target_date.strftime('%d %b %Y')}**, "
+    "based on your expected conditions. Shaded bands show the confidence interval. "
+    "The blue vertical line marks your target date. "
+    "Lines crossing above the orange threshold (0.6) indicate HIGH risk — time to hedge."
+)
+
+# ── Summary call-to-action ─────────────────────────────────────────────────
+_max_fd_stock = max(_fd_results, key=_fd_results.get)
+_max_fd_risk  = _fd_results[_max_fd_stock]
+_avg_fd_risk  = sum(_fd_results.values()) / len(_fd_results)
+
+if _max_fd_risk >= 0.80:
+    _fd_color, _fd_icon, _fd_msg = ACCENT_RED, "&#128680;", f"EXTREME risk predicted for {_max_fd_stock} by {target_date.strftime('%d %b')}. Execute full hedge immediately."
+elif _max_fd_risk >= 0.60:
+    _fd_color, _fd_icon, _fd_msg = "#f97316", "&#9888;&#65039;", f"HIGH risk predicted for {_max_fd_stock} by {target_date.strftime('%d %b')}. Begin partial hedge (25–40%)."
+elif _max_fd_risk >= 0.30:
+    _fd_color, _fd_icon, _fd_msg = ACCENT_AMBER, "&#128202;", f"MODERATE risk by {target_date.strftime('%d %b')}. Prepare hedge instruments — watch cotton futures."
+else:
+    _fd_color, _fd_icon, _fd_msg = ACCENT_GREEN, "&#9989;", f"LOW risk predicted across all stocks by {target_date.strftime('%d %b')}. No hedging required."
+
+st.markdown(f"""
+<div style="background:{_fd_color}12;border:1px solid {_fd_color}44;
+            border-left:4px solid {_fd_color};border-radius:12px;
+            padding:1rem 1.4rem;margin:0.5rem 0 1rem 0;">
+    <div style="font-size:1.05rem;font-weight:700;color:{_fd_color};margin-bottom:0.25rem;">
+        {_fd_icon}&nbsp; Forward Prediction — {target_date.strftime('%d %b %Y')}
+    </div>
+    <div style="font-size:0.95rem;color:#94a3b8;line-height:1.6;">
+        {_fd_msg}<br>
+        Portfolio average risk on target date:
+        <b style="color:{_fd_color};">{_avg_fd_risk:.0%}</b>
+        &nbsp;&middot;&nbsp; Highest exposure:
+        <b style="color:{TEXT_PRIMARY};">{_max_fd_stock}</b>
+        at <b style="color:{_fd_color};">{_max_fd_risk:.0%}</b>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
 # ---------------------------------------------------------------------------
 # Bottom spacer
 # ---------------------------------------------------------------------------
 st.markdown("<div style='height:2rem;'></div>", unsafe_allow_html=True)
+
