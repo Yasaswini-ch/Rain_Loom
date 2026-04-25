@@ -1,4 +1,4 @@
-"""
+﻿"""
 Page 4 — Scenario Simulator
 ==============================
 Event-grade interactive what-if analysis: adjust monsoon, cotton-price,
@@ -1057,22 +1057,27 @@ st.markdown(f"""
 
 st.markdown("<div style='height:1rem;'></div>", unsafe_allow_html=True)
 
-# ── Date + inputs ──────────────────────────────────────────────────────────
+# -- Date + inputs --
 import datetime as _dt
 _today = _dt.date.today()
 _max_date = _today + _dt.timedelta(days=365)
 
-fd_col1, fd_col2, fd_col3, fd_col4, fd_col5 = st.columns([2, 1, 1, 1, 1])
-
-with fd_col1:
+# Date picker on its own prominent row
+st.markdown(f'<div style="font-size:0.95rem;font-weight:600;color:{TEXT_PRIMARY};margin-bottom:4px;">Target Forecast Date <span style="font-size:0.82rem;font-weight:400;color:{TEXT_MUTED};margin-left:8px;">Pick any future date up to 12 months ahead</span></div>', unsafe_allow_html=True)
+_date_col, _spacer = st.columns([2, 5])
+with _date_col:
     target_date = st.date_input(
-        "&#128197; Target Forecast Date",
+        "Target Forecast Date",
         value=_today + _dt.timedelta(weeks=8),
         min_value=_today + _dt.timedelta(days=1),
         max_value=_max_date,
         key="fd_date",
-        help="Pick any date up to 12 months ahead. The model projects conditions on that date.",
+        label_visibility="collapsed",
+        help="Pick any date up to 12 months ahead. The model projects risk on that date.",
     )
+
+st.markdown(f'<div style="font-size:0.95rem;font-weight:600;color:{TEXT_PRIMARY};margin:1rem 0 4px 0;">Expected Conditions on that Date <span style="font-size:0.82rem;font-weight:400;color:{TEXT_MUTED};margin-left:8px;">Enter what you expect the climate &amp; market to look like</span></div>', unsafe_allow_html=True)
+fd_col2, fd_col3, fd_col4, fd_col5 = st.columns([1, 1, 1, 1])
 
 with fd_col2:
     fd_deficit = st.number_input(
