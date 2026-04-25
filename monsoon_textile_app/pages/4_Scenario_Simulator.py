@@ -1168,6 +1168,88 @@ for _row_start in range(0, len(_fd_items), 4):
                     CI: {_r['ci_low']:.0%} &ndash; {_r['ci_high']:.0%}</div>
             </div>
             """, unsafe_allow_html=True)
+# -- Investment Ranking -------------------------------------------------------
+st.markdown(
+    f'<div style="margin:1.6rem 0 0.5rem 0;font-size:1.05rem;font-weight:600;color:{TEXT_PRIMARY};">'
+    f'Investment Ranking on {target_date.strftime("%d %b %Y")}'
+    f'<span style="font-size:0.82rem;font-weight:400;color:{TEXT_MUTED};margin-left:8px;">'
+    f'Safest (BUY) to riskiest (AVOID)</span></div>',
+    unsafe_allow_html=True,
+)
+_ranked       = sorted(_fd_results.items(), key=lambda x: x[1])
+_rank_names   = [s for s, _ in _ranked]
+_rank_risks   = [r for _, r in _ranked]
+_rank_colors, _rank_signals, _rank_reasons = [], [], []
+for _sn, _sr in _ranked:
+    _si = STOCKS[_sn]
+    _dp = f"{_si['dep']:.0%}"; _ch = _si['chain']
+    if _sr < 0.30:
+        _rank_colors.append(ACCENT_GREEN);  _rank_signals.append("BUY");
+        _rank_reasons.append(f"Low monsoon exposure. Dep: {_dp}, Chain: {_ch}")
+    elif _sr < 0.55:
+        _rank_colors.append(ACCENT_AMBER);  _rank_signals.append("HOLD");
+        _rank_reasons.append(f"Moderate risk. Watch cotton prices. Dep: {_dp}")
+    elif _sr < 0.75:
+        _rank_colors.append("#f97316");     _rank_signals.append("REDUCE");
+        _rank_reasons.append(f"Elevated risk. Trim position. Chain: {_ch}")
+    else:
+        _rank_colors.append(ACCENT_RED);    _rank_signals.append("AVOID");
+        _rank_reasons.append(f"Extreme monsoon exposure. Cotton dep: {_dp}")
+fig_rank = go.Figure(go.Bar(
+    x=_rank_risks, y=_rank_names, orientation="h",
+    marker_color=_rank_colors,
+    text=[f"{r:.0%}  {sig}" for r, sig in zip(_rank_risks, _rank_signals)],
+    textposition="outside", textfont=dict(size=13, color=TEXT_PRIMARY),
+    hovertemplate=[
+        f"<b>{sn}</b><br>Risk: {sr:.1%}<br>Signal: {sig}<br>{rsn}<extra></extra>"
+        for sn, sr, sig, rsn in zip(_rank_names, _rank_risks, _rank_signals, _rank_reasons)
+    ],
+))
+for _tx, _tc in [(0.30, ACCENT_GREEN), (0.55, ACCENT_AMBER), (0.75, "#f97316")]:
+    fig_rank.add_shape(type="line", x0=_tx, x1=_tx, y0=0, y1=1,
+                       xref="x", yref="paper", line=dict(color=_tc, width=1, dash="dot"))
+fig_rank.update_layout(
+    **PLOTLY_LAYOUT_DEFAULTS, height=340,
+    xaxis=dict(title="Predicted Risk Score", tickformat=".0%", range=[0, 1.15],
+               showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
+    yaxis=dict(autorange="reversed", showgrid=False),
+    margin=dict(l=130, r=80, t=20, b=40), showlegend=False,
+)
+st.plotly_chart(fig_rank, use_container_width=True, key="fd_rank_chart")
+_sig_rows = ""
+for _ri, (_sn, _sr) in enumerate(_ranked, 1):
+    _sig = _rank_signals[_ri-1]; _rsn = _rank_reasons[_ri-1]; _clr = _rank_colors[_ri-1]
+    _ch2 = STOCKS[_sn]["chain"]; _dp2 = f"{STOCKS[_sn]['dep']:.0%}"
+    _sig_rows += (
+        f"<tr>"
+        f"<td style='font-weight:700;color:{TEXT_PRIMARY};padding:8px 10px;'>{_ri}</td>"
+        f"<td style='font-weight:600;color:{TEXT_PRIMARY};padding:8px 10px;'>{_sn}</td>"
+        f"<td style='color:{TEXT_MUTED};padding:8px 10px;'>{_ch2}</td>"
+        f"<td style='color:{TEXT_MUTED};padding:8px 10px;'>{_dp2}</td>"
+        f"<td style='font-weight:700;color:{_clr};font-size:1.05rem;padding:8px 10px;'>{_sr:.0%}</td>"
+        f"<td style='padding:8px 10px;'><span style='background:{_clr}22;color:{_clr};"
+        f"padding:3px 10px;border-radius:12px;font-weight:700;font-size:0.85rem;"
+        f"letter-spacing:0.05em;'>{_sig}</span></td>"
+        f"<td style='color:{TEXT_MUTED};font-size:0.88rem;padding:8px 10px;'>{_rsn}</td>"
+        f"</tr>"
+    )
+st.markdown(
+    f"<div style='background:{BG_CARD};border:1px solid {GLASS_BORDER};border-radius:12px;"
+    f"padding:1rem 1.2rem;overflow-x:auto;'>"
+    f"<table style='width:100%;border-collapse:separate;border-spacing:0;font-family:{FONT_STACK};font-size:0.93rem;'>"
+    f"<thead><tr style='color:{TEXT_MUTED};font-size:0.82rem;text-transform:uppercase;letter-spacing:0.07em;'>"
+    f"<th style='padding:6px 10px;'>Rank</th><th style='padding:6px 10px;'>Stock</th>"
+    f"<th style='padding:6px 10px;'>Chain</th><th style='padding:6px 10px;'>Cotton Dep</th>"
+    f"<th style='padding:6px 10px;'>Risk</th><th style='padding:6px 10px;'>Signal</th>"
+    f"<th style='padding:6px 10px;'>Rationale</th></tr></thead>"
+    f"<tbody>{_sig_rows}</tbody></table></div>",
+    unsafe_allow_html=True,
+)
+st.info(
+    "**How to read:** Stocks at the **top** (lowest risk) are the best investment opportunities on "
+    f"**{target_date.strftime('%d %b %Y')}**. "
+    "**BUY** = strong entry. **HOLD** = maintain. **REDUCE** = trim position. **AVOID** = high volatility risk."
+)
 
 # ── Week-by-week trajectory fan chart ────────────────────────────────────
 st.markdown(f'<div style="font-size:1.05rem;font-weight:600;color:{TEXT_PRIMARY};'
