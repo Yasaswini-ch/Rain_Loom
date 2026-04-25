@@ -1181,6 +1181,15 @@ _base_breadth  = st.session_state.get("sc_breadth",   40)
 
 fig_traj = go.Figure()
 
+# Helper: convert #rrggbb hex to rgba() string (Plotly 6.x rejects 8-digit hex)
+def _hex_to_rgba(hex_color: str, alpha: float = 0.09) -> str:
+    try:
+        h = hex_color.lstrip("#")
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        return f"rgba({r},{g},{b},{alpha})"
+    except Exception:
+        return f"rgba(99,102,241,{alpha})"
+
 for _name, _info in STOCKS.items():
     _color = _info.get("color", ACCENT_BLUE)
     _traj, _lo, _hi = [], [], []
@@ -1203,7 +1212,7 @@ for _name, _info in STOCKS.items():
         x=_x_labels + _x_labels[::-1],
         y=_hi + _lo[::-1],
         fill="toself",
-        fillcolor=f"{_color}18",
+        fillcolor=_hex_to_rgba(_color, 0.09),
         line=dict(width=0),
         showlegend=False,
         hoverinfo="skip",
